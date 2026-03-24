@@ -95,7 +95,7 @@ backtesting:
 analytics:
   correlation_threshold: 0.7
   feature_importance_top_n: 20
-  plot_style: "seaborn"
+  plot_style: "default"  # Options: default, seaborn-v0_8-darkgrid, ggplot, bmh
   figure_size: [12, 8]
 
 # Monitoring & Logging

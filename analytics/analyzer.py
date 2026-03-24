@@ -27,9 +27,19 @@ class FeatureAnalyzer:
         self.output_dir = Path(output_dir)
         ensure_dir(self.output_dir)
         
-        # Set plot style
-        plt.style.use(config.get('analytics.plot_style', 'seaborn'))
-        sns.set_palette("husl")
+        # Set plot style (use seaborn-v0_8 for newer matplotlib versions)
+        try:
+            plt.style.use(config.get('analytics.plot_style', 'seaborn-v0_8-darkgrid'))
+        except:
+            try:
+                plt.style.use('seaborn-darkgrid')
+            except:
+                plt.style.use('default')
+        
+        try:
+            sns.set_palette("husl")
+        except:
+            pass  # Seaborn not available or palette issue
         
         logger.info("FeatureAnalyzer initialized")
     
