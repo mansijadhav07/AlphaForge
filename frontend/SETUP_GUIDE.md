@@ -123,28 +123,35 @@ npm start
 ## 🎯 Current Status
 
 **Phase 1: Dashboard** ✅ COMPLETE  
-**Phase 2: Stock Detail Page** ✅ COMPLETE
+**Phase 2: Stock Detail Page** ✅ COMPLETE  
+**Phase 3: Backtesting UI** ✅ COMPLETE
 
 **Files Created:**
-- 25+ TypeScript/React files
+- 30+ TypeScript/React files
 - Complete dashboard with real-time data
 - Stock detail page with interactive charts
+- Backtesting UI with strategy comparison
 - Technical indicator overlays
 - Feature panel with tooltips
 - Regime indicator
+- Performance metrics
+- Equity curve visualization
 - Professional UI components
 - API integration layer
 - Full styling system
 
 **Features Implemented:**
 ✅ Interactive price chart with Recharts
-✅ RSI indicator chart with overbought/oversold lines
-✅ MACD indicator chart with histogram
-✅ Volume chart
+✅ RSI, MACD, Volume indicator charts
 ✅ Moving averages overlay (SMA 10, 30, 50)
 ✅ Bollinger Bands overlay
 ✅ Feature badges with hover tooltips
 ✅ Regime indicator with strength meter
+✅ Strategy selection dropdown
+✅ Performance metrics cards
+✅ Equity curve chart with buy & hold comparison
+✅ Strategy comparison table
+✅ Best strategy highlighting
 ✅ Auto-refresh every 10 seconds
 ✅ Responsive design
 
@@ -152,9 +159,12 @@ npm start
 - Install dependencies: `npm install`
 - Run dev server: `npm run dev`
 - View at: http://localhost:3000
-- Navigate to any stock: http://localhost:3000/stock/AAPL
+- Navigate to:
+  - Dashboard: http://localhost:3000/dashboard
+  - Stock: http://localhost:3000/stock/AAPL
+  - Backtesting: http://localhost:3000/backtesting
 
 ---
 
-**Status**: Phase 2 Complete ✅  
-**Next**: Build Backtesting UI
+**Status**: Phase 3 Complete ✅  
+**Next**: Build Insights Page (Phase 4)
