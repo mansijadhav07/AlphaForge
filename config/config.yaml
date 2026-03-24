@@ -1,0 +1,126 @@
+# Real-Time Financial Feature Store Configuration
+
+# Data Ingestion Settings
+data:
+  tickers:
+    - AAPL
+    - TSLA
+    - GOOGL
+    - MSFT
+    - AMZN
+  start_date: "2020-01-01"
+  end_date: "2024-12-31"
+  interval: "1d"  # 1d, 1h, 5m, etc.
+
+# Storage Settings
+storage:
+  data_dir: "./data"
+  raw_data_dir: "./data/raw"
+  validated_data_dir: "./data/validated"
+  offline_store_dir: "./data/features/offline"
+  logs_dir: "./logs"
+  
+  # Redis Configuration (Online Feature Store)
+  redis:
+    host: "localhost"
+    port: 6379
+    db: 0
+    key_prefix: "feature_store"
+    ttl: 86400  # 24 hours in seconds
+
+# Feature Engineering Settings
+features:
+  # Window sizes for rolling calculations
+  windows:
+    short: 10
+    medium: 30
+    long: 50
+    volatility: 20
+  
+  # Technical Indicator Parameters
+  indicators:
+    rsi_period: 14
+    macd_fast: 12
+    macd_slow: 26
+    macd_signal: 9
+    bollinger_std: 2
+    atr_period: 14
+    stochastic_k: 14
+    stochastic_d: 3
+  
+  # Lag Features
+  lags:
+    price_lags: [1, 5, 10]
+    volume_lags: [1, 5]
+  
+  # Regime Detection
+  regime:
+    trend_threshold: 0.02  # 2% threshold for trend classification
+    volatility_threshold: 0.015  # 1.5% for volatility regime
+
+# Pipeline Settings
+pipeline:
+  batch_size: 1000
+  incremental_update: true
+  parallel_processing: true
+  n_jobs: -1  # Use all available cores
+  
+  # Streaming Simulation
+  streaming:
+    enabled: true
+    update_interval: 60  # seconds
+    lookback_days: 90
+
+# Backtesting Settings
+backtesting:
+  initial_capital: 100000
+  commission: 0.001  # 0.1%
+  slippage: 0.0005   # 0.05%
+  
+  strategies:
+    rsi_strategy:
+      buy_threshold: 30
+      sell_threshold: 70
+      position_size: 0.1  # 10% of capital per trade
+    
+    macd_strategy:
+      position_size: 0.15
+    
+    trend_following:
+      ma_period: 50
+      momentum_threshold: 0
+      position_size: 0.2
+
+# Analytics Settings
+analytics:
+  correlation_threshold: 0.7
+  feature_importance_top_n: 20
+  plot_style: "seaborn"
+  figure_size: [12, 8]
+
+# Monitoring & Logging
+monitoring:
+  log_level: "INFO"  # DEBUG, INFO, WARNING, ERROR
+  enable_metrics: true
+  alert_on_errors: true
+  data_quality_checks: true
+  
+  # Data Quality Thresholds
+  quality:
+    max_missing_pct: 0.05  # 5%
+    max_price_change_pct: 0.25  # 25% daily change threshold
+    min_volume: 1000
+
+# Dashboard Settings
+dashboard:
+  title: "Financial Feature Store Dashboard"
+  refresh_interval: 30  # seconds
+  default_ticker: "AAPL"
+  chart_height: 400
+  show_advanced_features: true
+
+# Feature Versioning
+versioning:
+  enabled: true
+  current_version: "v1"
+  track_changes: true
