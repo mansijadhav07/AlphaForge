@@ -238,10 +238,6 @@ Features support versioning for A/B testing:
 
 MIT License
 
-## 👥 Authors
-
-Senior Software Engineering Team
-
 ## 🔗 References
 
 - Technical Analysis Library: https://technical-analysis-library-in-python.readthedocs.io/
