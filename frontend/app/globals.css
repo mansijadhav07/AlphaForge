@@ -38,24 +38,119 @@
 }
 
 @layer utilities {
+  /* Premium Glassmorphism */
   .glass {
-    @apply bg-white/5 backdrop-blur-md border border-white/10;
+    @apply bg-white/5 backdrop-blur-xl border border-white/10;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03));
+  }
+  
+  .glass-card {
+    @apply glass rounded-2xl shadow-2xl;
+    box-shadow: 
+      0 8px 32px 0 rgba(0, 0, 0, 0.37),
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.1);
   }
   
   .glass-hover {
-    @apply hover:bg-white/10 transition-all duration-300;
+    @apply hover:bg-white/10 hover:border-white/20 transition-all duration-500 ease-out;
+    transform: translateY(0);
   }
   
+  .glass-hover:hover {
+    transform: translateY(-2px);
+    box-shadow: 
+      0 12px 40px 0 rgba(6, 182, 212, 0.15),
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.15);
+  }
+  
+  /* Premium Gradients */
   .gradient-text {
-    @apply bg-gradient-to-r from-neon-blue to-neon-teal bg-clip-text text-transparent;
+    @apply bg-gradient-to-r from-neon-blue via-neon-teal to-neon-blue bg-clip-text text-transparent;
+    background-size: 200% auto;
+    animation: gradient-shift 3s ease infinite;
   }
   
-  .card-glow {
-    box-shadow: 0 0 20px rgba(6, 182, 212, 0.1);
+  .gradient-border {
+    position: relative;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03));
+    border-radius: 1rem;
   }
   
-  .card-glow-hover:hover {
-    box-shadow: 0 0 30px rgba(6, 182, 212, 0.2);
+  .gradient-border::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 1rem;
+    padding: 1px;
+    background: linear-gradient(135deg, rgba(6, 182, 212, 0.5), rgba(20, 184, 166, 0.5));
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+  }
+  
+  /* Premium Glows */
+  .glow-blue {
+    box-shadow: 0 0 20px rgba(6, 182, 212, 0.2);
+  }
+  
+  .glow-blue-hover:hover {
+    box-shadow: 0 0 40px rgba(6, 182, 212, 0.4);
+  }
+  
+  .glow-teal {
+    box-shadow: 0 0 20px rgba(20, 184, 166, 0.2);
+  }
+  
+  .glow-teal-hover:hover {
+    box-shadow: 0 0 40px rgba(20, 184, 166, 0.4);
+  }
+  
+  .glow-purple {
+    box-shadow: 0 0 20px rgba(168, 85, 247, 0.2);
+  }
+  
+  /* Premium Backgrounds */
+  .bg-mesh {
+    background-image: 
+      radial-gradient(at 0% 0%, rgba(6, 182, 212, 0.1) 0px, transparent 50%),
+      radial-gradient(at 100% 0%, rgba(20, 184, 166, 0.1) 0px, transparent 50%),
+      radial-gradient(at 100% 100%, rgba(168, 85, 247, 0.1) 0px, transparent 50%),
+      radial-gradient(at 0% 100%, rgba(6, 182, 212, 0.1) 0px, transparent 50%);
+  }
+  
+  .bg-grid {
+    background-image: 
+      linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+    background-size: 50px 50px;
+  }
+  
+  /* Premium Text */
+  .text-premium {
+    @apply text-foreground/90 font-medium tracking-tight;
+  }
+  
+  .text-muted-premium {
+    @apply text-muted-foreground/70 text-sm;
+  }
+  
+  /* Premium Buttons */
+  .btn-premium {
+    @apply glass-card px-6 py-3 font-semibold transition-all duration-300;
+    @apply hover:scale-105 active:scale-95;
+  }
+  
+  /* Skeleton Loaders */
+  .skeleton {
+    @apply animate-pulse bg-white/5 rounded-lg;
+  }
+  
+  .skeleton-text {
+    @apply skeleton h-4 w-full;
+  }
+  
+  .skeleton-card {
+    @apply skeleton h-32 w-full;
   }
 }
 
@@ -80,7 +175,50 @@
 
 /* Smooth transitions */
 * {
-  transition-property: background-color, border-color, color, fill, stroke;
+  transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow, transform;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  transition-duration: 150ms;
+  transition-duration: 200ms;
+}
+
+/* Premium Animations */
+@keyframes gradient-shift {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-shimmer {
+  animation: shimmer 2s infinite;
+  background: linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.05) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  background-size: 1000px 100%;
 }

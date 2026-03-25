@@ -96,29 +96,25 @@ export default function InsightsPage() {
           title="Total Insights"
           value={insightCounts.total}
           icon={Brain}
-          iconColor="text-neon-blue"
-          iconBgColor="bg-neon-blue/10"
+          trend="neutral"
         />
         <StatCard
           title="Warnings"
           value={insightCounts.warnings}
           icon={AlertTriangle}
-          iconColor="text-neutral"
-          iconBgColor="bg-neutral/10"
+          trend="down"
         />
         <StatCard
           title="Opportunities"
           value={insightCounts.opportunities}
           icon={Target}
-          iconColor="text-bullish"
-          iconBgColor="bg-bullish/10"
+          trend="up"
         />
         <StatCard
           title="Market Updates"
           value={insightCounts.info}
           icon={Activity}
-          iconColor="text-neon-teal"
-          iconBgColor="bg-neon-teal/10"
+          trend="neutral"
         />
       </div>
 
