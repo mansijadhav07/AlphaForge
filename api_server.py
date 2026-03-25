@@ -11,6 +11,7 @@ from contextlib import asynccontextmanager
 import uvicorn
 
 from api.pgm_routes import router as pgm_router
+from api.market_routes import router as market_router
 from api.dependencies import initialize_pgm_service
 from utils.logger import setup_logging, get_logger
 
@@ -97,6 +98,7 @@ app.add_middleware(
 
 # Include routers
 app.include_router(pgm_router)
+app.include_router(market_router)
 
 
 # Root endpoint

@@ -1,5 +1,5 @@
 """
-Pydantic schemas for PGM API request/response validation.
+Pydantic schemas for API request/response validation.
 """
 
 from pydantic import BaseModel, Field, validator
@@ -37,7 +37,68 @@ class RegimeType(str, Enum):
     SIDEWAYS = "sideways"
 
 
-# Response Models
+# Market Data Models
+class MarketOverview(BaseModel):
+    """Market overview response."""
+    timestamp: str
+    market_regime: str
+    volatility_index: float
+    top_stocks: List[Dict[str, Any]]
+    signals: List[Dict[str, Any]]
+
+
+class StockFeatures(BaseModel):
+    """Stock features response."""
+    ticker: str
+    date: str
+    close: float
+    open: float
+    high: float
+    low: float
+    volume: int
+    return_: float = Field(alias="return")
+    rsi: float
+    macd: float
+    macd_signal: float
+    macd_diff: float
+    sma_10: float
+    sma_30: float
+    sma_50: float
+    volatility_10: float
+    volatility_30: float
+    momentum_score: float
+    regime: int
+    bb_upper: float
+    bb_middle: float
+    bb_lower: float
+    atr: float
+
+
+class BacktestResult(BaseModel):
+    """Backtest result response."""
+    strategy: str
+    ticker: str
+    initial_capital: float
+    final_value: float
+    total_return: float
+    sharpe_ratio: float
+    max_drawdown: float
+    win_rate: float
+    num_trades: int
+    equity_curve: List[Dict[str, Any]]
+
+
+class Insight(BaseModel):
+    """Market insight."""
+    id: str
+    type: str
+    title: str
+    description: str
+    timestamp: str
+    ticker: Optional[str] = None
+
+
+# PGM Response Models
 class ProbabilityResponse(BaseModel):
     """Response model for probability distribution."""
     
