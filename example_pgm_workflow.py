@@ -55,7 +55,7 @@ def main():
     offline_store = OfflineFeatureStore()
     
     try:
-        df = offline_store.read_latest_features('market_features')
+        df = offline_store.read_features('market_features', use_latest=True)
         print(f"✓ Loaded {len(df)} records from feature store")
         print(f"  Tickers: {df['ticker'].unique().tolist()}")
         print(f"  Date range: {df['date'].min()} to {df['date'].max()}")

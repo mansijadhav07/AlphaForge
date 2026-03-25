@@ -5,6 +5,7 @@ Defines the directed acyclic graph (DAG) structure representing
 causal and probabilistic dependencies between financial features.
 """
 
+import pandas as pd
 import networkx as nx
 import matplotlib.pyplot as plt
 from typing import List, Tuple, Dict, Optional
