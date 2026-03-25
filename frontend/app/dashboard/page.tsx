@@ -9,6 +9,7 @@ import { StatCard } from '@/components/ui/stat-card'
 import { SkeletonStats, SkeletonCard } from '@/components/ui/skeleton-loader'
 import { api, type MarketOverview } from '@/lib/api'
 import { formatCurrency, formatPercentage, getChangeColor, getSignalColor } from '@/lib/utils'
+import { config } from '@/lib/config'
 import Link from 'next/link'
 
 const container = {
@@ -32,7 +33,10 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const fetchData = async () => {
-      setLoading(true)
+      // Only show loading on initial load, not on refresh
+      if (!marketData) {
+        setLoading(true)
+      }
       const data = await api.getMarketOverview()
       setMarketData(data)
       setLoading(false)
@@ -40,9 +44,11 @@ export default function DashboardPage() {
 
     fetchData()
     
-    // Auto-refresh every 10 seconds
-    const interval = setInterval(fetchData, 10000)
-    return () => clearInterval(interval)
+    // Auto-refresh based on config
+    if (config.features.autoRefresh) {
+      const interval = setInterval(fetchData, config.refresh.dashboard)
+      return () => clearInterval(interval)
+    }
   }, [])
 
   if (loading || !marketData) {

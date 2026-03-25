@@ -11,7 +11,7 @@ export default function Home() {
   useEffect(() => {
     const timer = setTimeout(() => {
       router.push('/dashboard')
-    }, 2000)
+    }, 1500) // Reduced from 2000ms to 1500ms
 
     return () => clearTimeout(timer)
   }, [router])
