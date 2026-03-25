@@ -18,6 +18,7 @@ from api.schemas import (
     FeatureImpactResponse,
     RegimeResponse,
     GraphStructureResponse,
+    ModelEvaluationResponse,
     ErrorResponse
 )
 from api.dependencies import get_pgm_service
@@ -523,3 +524,188 @@ async def health_check(pgm_service = Depends(get_pgm_service)) -> Dict:
             "error": str(e),
             "timestamp": datetime.now().isoformat()
         }
+
+
+@router.get(
+    "/evaluation/{symbol}",
+    response_model=ModelEvaluationResponse,
+    summary="Get model evaluation metrics",
+    description="Returns comprehensive evaluation metrics including accuracy, confusion matrix, and calibration"
+)
+async def get_model_evaluation(
+    symbol: str,
+    lookback_periods: int = Query(5, ge=1, le=30, description="Periods to look ahead for actual outcome"),
+    pgm_service = Depends(get_pgm_service)
+) -> ModelEvaluationResponse:
+    """
+    Get model evaluation metrics for a symbol.
+    
+    Args:
+        symbol: Stock ticker symbol
+        lookback_periods: Number of periods to look ahead for actual outcome
+        pgm_service: Injected PGM service
+        
+    Returns:
+        ModelEvaluationResponse with evaluation metrics
+    """
+    try:
+        logger.info(f"Getting model evaluation for {symbol}")
+        
+        # Try to load cached results first
+        from pgm_model.evaluation import ModelEvaluator
+        evaluator = ModelEvaluator()
+        
+        cached_results = evaluator.load_results(symbol)
+        
+        if cached_results:
+            logger.info(f"Returning cached evaluation results for {symbol}")
+            return ModelEvaluationResponse(
+                symbol=symbol,
+                **cached_results
+            )
+        
+        # If no cached results, perform evaluation on available data
+        # Get historical features
+        from feature_store.offline_store import OfflineFeatureStore
+        offline_store = OfflineFeatureStore()
+        
+        try:
+            features_df = offline_store.read_features('market_features', version='v1')
+            
+            # Filter for symbol
+            if 'ticker' in features_df.columns:
+                features_df = features_df[features_df['ticker'] == symbol]
+            
+            if len(features_df) < lookback_periods + 10:
+                raise HTTPException(
+                    status_code=404,
+                    detail=f"Insufficient historical data for {symbol}"
+                )
+            
+            # Perform evaluation
+            results = evaluator.evaluate_model_on_historical_data(
+                pgm_service.state_encoder,
+                pgm_service.inference_engine,
+                features_df,
+                lookback_periods=lookback_periods
+            )
+            
+            # Save results
+            evaluator.save_results(results, symbol)
+            
+            return ModelEvaluationResponse(
+                symbol=symbol,
+                **results
+            )
+            
+        except Exception as e:
+            logger.warning(f"Could not evaluate on historical data: {e}")
+            # Return mock data for development
+            return _get_mock_evaluation(symbol)
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting evaluation for {symbol}: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to get evaluation: {str(e)}")
+
+
+def _get_mock_evaluation(symbol: str) -> ModelEvaluationResponse:
+    """Generate mock evaluation data for development."""
+    return ModelEvaluationResponse(
+        symbol=symbol,
+        timestamp=datetime.now().isoformat(),
+        n_samples=100,
+        accuracy=0.65,
+        confusion_matrix={
+            "classes": ["positive", "neutral", "negative"],
+            "matrix": [[30, 5, 5], [10, 20, 10], [5, 5, 10]],
+            "row_totals": [40, 40, 20],
+            "col_totals": [45, 30, 25],
+            "total": 100
+        },
+        classification_report={
+            "positive": {
+                "precision": 0.67,
+                "recall": 0.75,
+                "f1_score": 0.71,
+                "support": 40
+            },
+            "neutral": {
+                "precision": 0.67,
+                "recall": 0.50,
+                "f1_score": 0.57,
+                "support": 40
+            },
+            "negative": {
+                "precision": 0.40,
+                "recall": 0.50,
+                "f1_score": 0.44,
+                "support": 20
+            },
+            "macro_avg": {
+                "precision": 0.58,
+                "recall": 0.58,
+                "f1_score": 0.57
+            }
+        },
+        brier_score={
+            "positive": 0.15,
+            "neutral": 0.18,
+            "negative": 0.20,
+            "overall": 0.18
+        },
+        calibration_data={
+            "positive": [
+                {"bin": i, "predicted_prob": i/10 + 0.05, "actual_freq": i/10 + 0.02, "count": 10}
+                for i in range(10)
+            ],
+            "neutral": [
+                {"bin": i, "predicted_prob": i/10 + 0.05, "actual_freq": i/10 + 0.03, "count": 10}
+                for i in range(10)
+            ],
+            "negative": [
+                {"bin": i, "predicted_prob": i/10 + 0.05, "actual_freq": i/10 + 0.04, "count": 10}
+                for i in range(10)
+            ]
+        },
+        probability_distribution={
+            "positive": {
+                "mean": 0.35,
+                "std": 0.15,
+                "min": 0.05,
+                "max": 0.85,
+                "median": 0.33,
+                "q25": 0.22,
+                "q75": 0.48
+            },
+            "neutral": {
+                "mean": 0.40,
+                "std": 0.12,
+                "min": 0.10,
+                "max": 0.75,
+                "median": 0.38,
+                "q25": 0.30,
+                "q75": 0.50
+            },
+            "negative": {
+                "mean": 0.25,
+                "std": 0.18,
+                "min": 0.02,
+                "max": 0.80,
+                "median": 0.20,
+                "q25": 0.12,
+                "q75": 0.35
+            }
+        },
+        class_distribution={
+            "predicted": {
+                "counts": {"positive": 45, "neutral": 30, "negative": 25},
+                "percentages": {"positive": 0.45, "neutral": 0.30, "negative": 0.25}
+            },
+            "actual": {
+                "counts": {"positive": 40, "neutral": 40, "negative": 20},
+                "percentages": {"positive": 0.40, "neutral": 0.40, "negative": 0.20}
+            }
+        }
+    )

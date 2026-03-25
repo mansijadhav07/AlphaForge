@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Activity, BarChart3, Brain, TrendingUp, Network, Target } from 'lucide-react'
+import { Activity, BarChart3, Brain, TrendingUp, Network, Target, CheckCircle2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const navigation = [
@@ -12,6 +12,7 @@ const navigation = [
   { name: 'Insights', href: '/insights', icon: Brain },
   { name: 'PGM Graph', href: '/pgm-graph', icon: Network },
   { name: 'Feature Impact', href: '/feature-impact', icon: Target },
+  { name: 'Model Eval', href: '/model-evaluation', icon: CheckCircle2 },
 ]
 
 export function Navbar() {

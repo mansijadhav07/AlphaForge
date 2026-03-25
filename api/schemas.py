@@ -406,3 +406,88 @@ class HealthResponse(BaseModel):
                 "timestamp": "2024-03-25T10:30:00"
             }
         }
+
+
+# Model Evaluation Schemas
+class ConfusionMatrixResponse(BaseModel):
+    """Confusion matrix data."""
+    
+    classes: List[str] = Field(..., description="Class labels")
+    matrix: List[List[int]] = Field(..., description="Confusion matrix values")
+    row_totals: List[int] = Field(..., description="Row totals")
+    col_totals: List[int] = Field(..., description="Column totals")
+    total: int = Field(..., description="Total samples")
+
+
+class ClassificationMetrics(BaseModel):
+    """Classification metrics for a single class."""
+    
+    precision: float = Field(..., description="Precision score")
+    recall: float = Field(..., description="Recall score")
+    f1_score: float = Field(..., description="F1 score")
+    support: int = Field(..., description="Number of samples")
+
+
+class CalibrationBin(BaseModel):
+    """Calibration data for a single bin."""
+    
+    bin: int = Field(..., description="Bin index")
+    predicted_prob: float = Field(..., description="Mean predicted probability")
+    actual_freq: float = Field(..., description="Actual frequency")
+    count: int = Field(..., description="Number of samples in bin")
+
+
+class ProbabilityStats(BaseModel):
+    """Probability distribution statistics."""
+    
+    mean: float = Field(..., description="Mean probability")
+    std: float = Field(..., description="Standard deviation")
+    min: float = Field(..., description="Minimum probability")
+    max: float = Field(..., description="Maximum probability")
+    median: float = Field(..., description="Median probability")
+    q25: float = Field(..., description="25th percentile")
+    q75: float = Field(..., description="75th percentile")
+
+
+class ClassDistribution(BaseModel):
+    """Class distribution data."""
+    
+    counts: Dict[str, int] = Field(..., description="Class counts")
+    percentages: Dict[str, float] = Field(..., description="Class percentages")
+
+
+class ModelEvaluationResponse(BaseModel):
+    """Model evaluation response."""
+    
+    symbol: str = Field(..., description="Stock symbol")
+    timestamp: str = Field(..., description="Evaluation timestamp")
+    n_samples: int = Field(..., description="Number of samples evaluated")
+    accuracy: float = Field(..., description="Overall accuracy", ge=0.0, le=1.0)
+    confusion_matrix: ConfusionMatrixResponse = Field(..., description="Confusion matrix")
+    classification_report: Dict[str, Any] = Field(..., description="Per-class metrics")
+    brier_score: Dict[str, float] = Field(..., description="Brier scores")
+    calibration_data: Dict[str, List[CalibrationBin]] = Field(..., description="Calibration curves")
+    probability_distribution: Dict[str, ProbabilityStats] = Field(..., description="Probability statistics")
+    class_distribution: Dict[str, ClassDistribution] = Field(..., description="Class distributions")
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "symbol": "AAPL",
+                "timestamp": "2024-03-25T10:30:00",
+                "n_samples": 100,
+                "accuracy": 0.65,
+                "confusion_matrix": {
+                    "classes": ["positive", "neutral", "negative"],
+                    "matrix": [[30, 5, 5], [10, 20, 10], [5, 5, 10]],
+                    "row_totals": [40, 40, 20],
+                    "col_totals": [45, 30, 25],
+                    "total": 100
+                },
+                "classification_report": {},
+                "brier_score": {"positive": 0.15, "neutral": 0.18, "negative": 0.20, "overall": 0.18},
+                "calibration_data": {},
+                "probability_distribution": {},
+                "class_distribution": {}
+            }
+        }
