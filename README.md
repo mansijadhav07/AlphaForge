@@ -159,28 +159,40 @@ You'll see a premium animated splash screen, then be redirected to the dashboard
 
 ## 📖 Documentation
 
-### Core Documentation
-- **[INSTALLATION_STEPS.md](INSTALLATION_STEPS.md)** - Detailed setup guide
-- **[ARCHITECTURE.md](ARCHITECTURE.md)** - System architecture
-- **[FEATURES.md](FEATURES.md)** - Complete feature list
-- **[QUICKSTART.md](QUICKSTART.md)** - Quick start guide
+All documentation is organized in the [`docs/`](./docs/) folder:
 
-### PGM Module Documentation
-- **[WHAT_IS_PGM.md](WHAT_IS_PGM.md)** - Introduction to PGMs
-- **[PGM_DOCUMENTATION.md](PGM_DOCUMENTATION.md)** - Complete PGM guide
-- **[PGM_INTEGRATION_GUIDE.md](PGM_INTEGRATION_GUIDE.md)** - Integration steps
-- **[PGM_MODULE_SUMMARY.md](PGM_MODULE_SUMMARY.md)** - Module overview
+### Quick Links
+- **[Installation Guide](./docs/setup/INSTALLATION.md)** - Complete setup instructions
+- **[Quick Start](./docs/setup/QUICKSTART.md)** - Get running in 5 minutes
+- **[Architecture](./docs/architecture/ARCHITECTURE.md)** - System design overview
+
+### Core Documentation
+- **[Project Analysis](./docs/overview/PROJECT_ANALYSIS.md)** - Complete project breakdown
+- **[Features List](./docs/overview/FEATURES.md)** - All implemented features
+- **[Project Summary](./docs/overview/PROJECT_SUMMARY.md)** - High-level overview
+
+### PGM Documentation
+- **[What is PGM?](./docs/pgm/WHAT_IS_PGM.md)** - Introduction to Probabilistic Graphical Models
+- **[PGM Documentation](./docs/pgm/PGM_DOCUMENTATION.md)** - Complete PGM guide
+- **[PGM Integration](./docs/pgm/PGM_INTEGRATION_GUIDE.md)** - How to integrate PGM
+- **[PGM Module Summary](./docs/pgm/PGM_MODULE_SUMMARY.md)** - Module overview
 
 ### Feature Documentation
-- **[PGM_GRAPH_SUMMARY.md](PGM_GRAPH_SUMMARY.md)** - Graph visualization
-- **[FEATURE_CONTRIBUTION_COMPLETE.md](FEATURE_CONTRIBUTION_COMPLETE.md)** - Feature impact
-- **[MODEL_EVALUATION_COMPLETE.md](MODEL_EVALUATION_COMPLETE.md)** - Model evaluation
-- **[FAILURE_ANALYSIS_COMPLETE.md](FAILURE_ANALYSIS_COMPLETE.md)** - Failure analysis
+- **[PGM Graph Visualization](./docs/features/PGM_GRAPH_SUMMARY.md)** - Interactive Bayesian network
+- **[Feature Contribution](./docs/features/FEATURE_CONTRIBUTION_COMPLETE.md)** - Feature impact analysis
+- **[Model Evaluation](./docs/features/MODEL_EVALUATION_COMPLETE.md)** - Performance metrics
+- **[Failure Analysis](./docs/features/FAILURE_ANALYSIS_COMPLETE.md)** - Error analysis
 
-### Frontend Documentation
-- **[frontend/PREMIUM_UI_COMPLETE.md](frontend/PREMIUM_UI_COMPLETE.md)** - UI enhancements
-- **[frontend/README.md](frontend/README.md)** - Frontend guide
-- **[frontend/SETUP_GUIDE.md](frontend/SETUP_GUIDE.md)** - Frontend setup
+### Performance
+- **[Performance Fixes](./docs/performance/PERFORMANCE_FIXES.md)** - Optimizations applied
+- **[Frontend Performance](./frontend/PERFORMANCE_GUIDE.md)** - Frontend tuning guide
+
+### Frontend
+- **[Frontend README](./frontend/README.md)** - Frontend overview
+- **[Frontend Setup](./frontend/SETUP_GUIDE.md)** - Frontend installation
+- **[Premium UI Guide](./frontend/PREMIUM_UI_COMPLETE.md)** - UI enhancements
+
+📚 **See [docs/README.md](./docs/README.md) for complete documentation index**
 
 ## 📁 Project Structure
 
@@ -236,7 +248,7 @@ AlphaForge/
 
 ### 1. Run Complete PGM Workflow
 ```bash
-python example_pgm_workflow.py
+python scripts/example_pgm_workflow.py
 ```
 This will:
 - Load and prepare data
