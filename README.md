@@ -52,6 +52,14 @@ project/
 ├── analytics/           # Analysis and insights
 ├── backtesting/         # Strategy evaluation
 ├── dashboard/           # Streamlit UI
+├── pgm_model/           # 🆕 Probabilistic Graphical Models
+│   ├── state_encoding.py      # Continuous → Discrete encoding
+│   ├── graph_structure.py     # Bayesian Network DAG
+│   ├── probability_learning.py # CPT learning
+│   ├── inference_engine.py    # Probabilistic inference
+│   ├── explanation_engine.py  # Human-readable explanations
+│   ├── scenario_simulator.py  # What-if analysis
+│   └── utils.py              # PGM utilities
 ├── config/              # Configuration files
 ├── utils/               # Shared utilities
 ├── data/                # Data storage (gitignored)
@@ -123,6 +131,14 @@ streamlit run dashboard/app.py
 python -m backtesting.backtest_engine --strategy rsi_strategy
 ```
 
+### 6. 🆕 Run Probabilistic Graphical Model Workflow
+```bash
+# Train PGM model and perform probabilistic inference
+python example_pgm_workflow.py
+```
+
+See `PGM_DOCUMENTATION.md` for detailed PGM usage and `PGM_INTEGRATION_GUIDE.md` for integration steps.
+
 ## 📊 Features Implemented
 
 ### Basic Features
@@ -151,6 +167,15 @@ python -m backtesting.backtest_engine --strategy rsi_strategy
 - **Regime Detection**: Bull/Bear/Sideways classification
 - **Momentum Score**: Composite indicator
 - **Feature Interactions**: volatility×return, volume×price_change
+
+### 🆕 Probabilistic Features (PGM Module)
+- **State Encoding**: Discrete states for continuous features
+- **Bayesian Network**: 11-node DAG modeling feature dependencies
+- **Conditional Probabilities**: Learned from historical data
+- **Probabilistic Inference**: P(Future Return | Market Conditions)
+- **Explanations**: Human-readable reasoning for predictions
+- **Scenario Simulation**: What-if analysis and sensitivity testing
+- **Trading Signals**: Probability-based buy/sell/hold recommendations
 
 ## 🧪 Backtesting Strategies
 
