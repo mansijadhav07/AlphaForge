@@ -2,12 +2,12 @@
 
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
-import { ArrowLeft, TrendingUp, Activity, BarChart3, Eye, EyeOff } from 'lucide-react'
+import { ArrowLeft, TrendingUp, Activity, BarChart3, Target } from 'lucide-react'
 import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 import { PriceChart } from '@/components/charts/price-chart'
 import { IndicatorChart } from '@/components/charts/indicator-chart'
+import { FeatureImpactChart } from '@/components/charts/feature-impact-chart'
 import { FeatureBadge } from '@/components/ui/feature-badge'
 import { RegimeIndicator } from '@/components/ui/regime-indicator'
 import { api, type StockFeatures } from '@/lib/api'
@@ -18,6 +18,7 @@ export default function StockDetailPage() {
   const symbol = params.symbol as string
 
   const [data, setData] = useState<StockFeatures[]>([])
+  const [featureImpact, setFeatureImpact] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [showIndicators, setShowIndicators] = useState({
     sma10: true,
@@ -31,6 +32,15 @@ export default function StockDetailPage() {
       setLoading(true)
       const features = await api.getFeatures(symbol)
       setData(features)
+      
+      // Fetch feature impact data
+      try {
+        const impact = await api.getPGMFeatureImpact(symbol)
+        setFeatureImpact(impact)
+      } catch (error) {
+        console.error('Error fetching feature impact:', error)
+      }
+      
       setLoading(false)
     }
 
@@ -240,6 +250,24 @@ export default function StockDetailPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Feature Contribution Analysis */}
+      {featureImpact && featureImpact.impacts && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <Target className="h-5 w-5 text-neon-blue" />
+              <span>Feature Contribution Analysis</span>
+            </CardTitle>
+            <p className="text-sm text-muted-foreground mt-1">
+              How each feature influences the probabilistic prediction
+            </p>
+          </CardHeader>
+          <CardContent style={{ height: '400px' }}>
+            <FeatureImpactChart data={featureImpact.impacts} title="" />
+          </CardContent>
+        </Card>
+      )}
     </div>
   )
 }
