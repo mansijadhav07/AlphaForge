@@ -491,3 +491,79 @@ class ModelEvaluationResponse(BaseModel):
                 "class_distribution": {}
             }
         }
+
+
+# Failure Analysis Schemas
+class FailureCase(BaseModel):
+    """Single failure case."""
+    
+    index: Any = Field(..., description="Index or identifier")
+    date: Optional[str] = Field(None, description="Date of prediction")
+    predicted: str = Field(..., description="Predicted class")
+    actual: str = Field(..., description="Actual class")
+    predicted_probability: float = Field(..., description="Probability of predicted class")
+    actual_probability: float = Field(..., description="Probability of actual class")
+    confidence: str = Field(..., description="Confidence level")
+    severity: str = Field(..., description="Failure severity")
+    reason: str = Field(..., description="Explanation for failure")
+    probabilities: Dict[str, float] = Field(..., description="All class probabilities")
+    feature_states: Dict[str, str] = Field(..., description="Feature states at time of prediction")
+    failure_type: str = Field(..., description="Type of failure")
+    is_common_pattern: Optional[bool] = Field(None, description="Whether this is a common pattern")
+    pattern_frequency: Optional[int] = Field(None, description="Frequency of this pattern")
+
+
+class FailureSummary(BaseModel):
+    """Summary of failure analysis."""
+    
+    total_failures: int = Field(..., description="Total number of failures")
+    by_type: Dict[str, int] = Field(..., description="Failures by type")
+    by_severity: Dict[str, int] = Field(..., description="Failures by severity")
+    by_confidence: Dict[str, int] = Field(..., description="Failures by confidence")
+    most_common_type: Optional[str] = Field(None, description="Most common failure type")
+    high_severity_count: int = Field(..., description="Number of high severity failures")
+    failure_rate: Optional[float] = Field(None, description="Overall failure rate")
+
+
+class FailureAnalysisResponse(BaseModel):
+    """Failure analysis response."""
+    
+    symbol: str = Field(..., description="Stock symbol")
+    timestamp: str = Field(..., description="Analysis timestamp")
+    failure_cases: List[FailureCase] = Field(..., description="List of failure cases")
+    summary: FailureSummary = Field(..., description="Summary statistics")
+    insights: List[str] = Field(..., description="Actionable insights")
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "symbol": "AAPL",
+                "timestamp": "2024-03-25T10:30:00",
+                "failure_cases": [
+                    {
+                        "index": 0,
+                        "date": "2024-03-20",
+                        "predicted": "positive",
+                        "actual": "negative",
+                        "predicted_probability": 0.75,
+                        "actual_probability": 0.10,
+                        "confidence": "high",
+                        "severity": "high",
+                        "reason": "Model was highly confident but wrong",
+                        "probabilities": {"positive": 0.75, "neutral": 0.15, "negative": 0.10},
+                        "feature_states": {"RSI": "oversold", "Momentum": "weak"},
+                        "failure_type": "false_positive_extreme"
+                    }
+                ],
+                "summary": {
+                    "total_failures": 35,
+                    "by_type": {"false_positive": 15, "false_negative": 20},
+                    "by_severity": {"high": 10, "medium": 15, "low": 10},
+                    "by_confidence": {"high": 10, "moderate": 15, "low": 10},
+                    "most_common_type": "false_negative",
+                    "high_severity_count": 10,
+                    "failure_rate": 0.35
+                },
+                "insights": ["Model is overconfident in some predictions"]
+            }
+        }
