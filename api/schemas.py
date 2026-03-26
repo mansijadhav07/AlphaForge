@@ -628,3 +628,159 @@ class FailureAnalysisResponse(BaseModel):
                 "insights": ["Model is overconfident in some predictions"]
             }
         }
+
+
+# ============================================================================
+# Structure Analysis Schemas
+# ============================================================================
+
+class CorrelationMatrix(BaseModel):
+    """Correlation matrix for features"""
+    features: List[str]
+    matrix: List[List[float]]
+    method: str
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "features": ["RSI", "MACD", "BB_width"],
+                "matrix": [[1.0, 0.65, 0.42], [0.65, 1.0, 0.38], [0.42, 0.38, 1.0]],
+                "method": "pearson"
+            }
+        }
+
+
+class NodeInfo(BaseModel):
+    """Information about a node in the network"""
+    name: str
+    parents: List[str]
+    children: List[str]
+    role: str
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "name": "RSI",
+                "parents": [],
+                "children": ["momentum_regime", "return_target"],
+                "role": "source"
+            }
+        }
+
+
+class DependencyPath(BaseModel):
+    """A dependency path through the network"""
+    path: List[str]
+    length: int
+    description: str
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "path": ["RSI", "momentum_regime", "return_target"],
+                "length": 3,
+                "description": "RSI → momentum_regime → return_target"
+            }
+        }
+
+
+class DependencyAnalysis(BaseModel):
+    """Analysis of network dependencies"""
+    nodes: Dict[str, NodeInfo]
+    key_nodes: List[str]
+    dependency_paths: List[DependencyPath]
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "nodes": {},
+                "key_nodes": ["momentum_regime", "volatility_regime"],
+                "dependency_paths": []
+            }
+        }
+
+
+class EdgeExplanation(BaseModel):
+    """Explanation for why an edge exists"""
+    parent: str
+    child: str
+    edge_type: str
+    strength: str
+    reasoning: str
+    financial_theory: str
+    empirical_support: str
+    causal_mechanism: str
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "parent": "RSI",
+                "child": "momentum_regime",
+                "edge_type": "momentum_indicator",
+                "strength": "strong",
+                "reasoning": "RSI directly measures momentum strength",
+                "financial_theory": "Momentum theory suggests persistent price trends",
+                "empirical_support": "High correlation (>0.7) in historical data",
+                "causal_mechanism": "RSI values determine momentum classification"
+            }
+        }
+
+
+class StructureValidation(BaseModel):
+    """Validation results for the network structure"""
+    is_valid_dag: bool
+    has_cycles: bool
+    correlation_support: Dict[str, float]
+    missing_edges: List[Dict[str, str]]
+    validation_summary: str
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "is_valid_dag": True,
+                "has_cycles": False,
+                "correlation_support": {"RSI->momentum_regime": 0.78},
+                "missing_edges": [],
+                "validation_summary": "Structure is valid DAG with strong empirical support"
+            }
+        }
+
+
+class NetworkSummary(BaseModel):
+    """Summary of the network structure"""
+    total_nodes: int
+    total_edges: int
+    is_dag: bool
+    description: str
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "total_nodes": 11,
+                "total_edges": 13,
+                "is_dag": True,
+                "description": "Bayesian Network for stock return prediction"
+            }
+        }
+
+
+class StructureAnalysisResponse(BaseModel):
+    """Complete structure analysis response"""
+    timestamp: str
+    correlation_matrix: CorrelationMatrix
+    dependency_analysis: DependencyAnalysis
+    edge_explanations: List[EdgeExplanation]
+    structure_validation: StructureValidation
+    network_summary: NetworkSummary
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "timestamp": "2026-03-26T10:30:00",
+                "correlation_matrix": {},
+                "dependency_analysis": {},
+                "edge_explanations": [],
+                "structure_validation": {},
+                "network_summary": {}
+            }
+        }

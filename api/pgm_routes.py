@@ -20,6 +20,7 @@ from api.schemas import (
     GraphStructureResponse,
     ModelEvaluationResponse,
     FailureAnalysisResponse,
+    StructureAnalysisResponse,
     ErrorResponse
 )
 from api.dependencies import get_pgm_service
@@ -923,4 +924,213 @@ def _get_mock_evaluation(symbol: str) -> ModelEvaluationResponse:
                 "percentages": {"positive": 0.40, "neutral": 0.40, "negative": 0.20}
             }
         }
+    )
+
+
+# ============================================================================
+# Structure Analysis Endpoint
+# ============================================================================
+
+@router.get(
+    "/structure-analysis",
+    response_model=StructureAnalysisResponse,
+    summary="Get Bayesian Network Structure Analysis",
+    description="""
+    Analyze the Bayesian Network structure with:
+    - Correlation matrix (heatmap-ready)
+    - Dependency analysis (nodes, paths, key features)
+    - Edge explanations (why each edge exists)
+    - Structure validation (DAG check, empirical support)
+    
+    This endpoint provides comprehensive justification for the network structure
+    based on financial theory, empirical correlations, and causal mechanisms.
+    """,
+    responses={
+        200: {"description": "Structure analysis completed successfully"},
+        500: {"model": ErrorResponse, "description": "Internal server error"}
+    }
+)
+async def get_structure_analysis(
+    symbol: str = Query("AAPL", description="Stock symbol for analysis"),
+    pgm_service = Depends(get_pgm_service)
+) -> StructureAnalysisResponse:
+    """
+    Get comprehensive structure analysis for the Bayesian Network.
+    
+    Args:
+        symbol: Stock symbol (used to fetch feature data for correlation analysis)
+        pgm_service: PGM service instance
+        
+    Returns:
+        Complete structure analysis with correlations, dependencies, and explanations
+    """
+    try:
+        logger.info(f"Structure analysis requested for {symbol}")
+        
+        # Import structure analyzer
+        from pgm_model.structure_analysis import StructureAnalyzer
+        
+        # Initialize analyzer
+        analyzer = StructureAnalyzer()
+        
+        # Get feature data for correlation analysis
+        try:
+            # Try to get real feature data
+            from feature_store.offline_store import OfflineFeatureStore
+            store = OfflineFeatureStore()
+            features_df = store.get_latest_features(symbol, feature_view="market_features")
+            
+            if features_df is None or features_df.empty:
+                logger.warning(f"No feature data found for {symbol}, using mock data")
+                features_df = _get_mock_features_df()
+        except Exception as e:
+            logger.warning(f"Error fetching features: {e}, using mock data")
+            features_df = _get_mock_features_df()
+        
+        # Generate comprehensive report
+        report = analyzer.generate_structure_report(features_df)
+        
+        # Transform to response format
+        response = _transform_structure_report(report)
+        
+        logger.info(f"Structure analysis completed for {symbol}")
+        return response
+        
+    except Exception as e:
+        logger.error(f"Error in structure analysis: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to generate structure analysis: {str(e)}"
+        )
+
+
+def _get_mock_features_df() -> pd.DataFrame:
+    """Generate mock feature data for correlation analysis."""
+    import numpy as np
+    
+    np.random.seed(42)
+    n_samples = 100
+    
+    # Generate correlated features
+    rsi = np.random.uniform(20, 80, n_samples)
+    macd = np.random.normal(0, 2, n_samples)
+    bb_width = np.random.uniform(0.01, 0.05, n_samples)
+    volume_ratio = np.random.uniform(0.5, 2.0, n_samples)
+    atr = np.random.uniform(0.5, 3.0, n_samples)
+    
+    # Create regime features with dependencies
+    momentum_regime = np.where(rsi > 70, 'strong', np.where(rsi < 30, 'weak', 'neutral'))
+    volatility_regime = np.where(bb_width > 0.03, 'high', 'low')
+    
+    # Create target with dependencies
+    return_target = np.where(
+        (momentum_regime == 'strong') & (volatility_regime == 'low'),
+        'positive',
+        np.where(
+            (momentum_regime == 'weak') & (volatility_regime == 'high'),
+            'negative',
+            'neutral'
+        )
+    )
+    
+    return pd.DataFrame({
+        'RSI': rsi,
+        'MACD': macd,
+        'BB_width': bb_width,
+        'volume_ratio': volume_ratio,
+        'ATR': atr,
+        'momentum_regime': momentum_regime,
+        'volatility_regime': volatility_regime,
+        'return_target': return_target
+    })
+
+
+def _transform_structure_report(report: Dict) -> StructureAnalysisResponse:
+    """Transform structure report to API response format."""
+    from api.schemas import (
+        CorrelationMatrix,
+        DependencyAnalysis,
+        NodeInfo,
+        DependencyPath,
+        EdgeExplanation,
+        StructureValidation,
+        NetworkSummary
+    )
+    
+    # Transform correlation matrix
+    corr_data = report['correlation_matrix']
+    correlation_matrix = CorrelationMatrix(
+        features=corr_data['features'],
+        matrix=corr_data['matrix'],
+        method=corr_data['method']
+    )
+    
+    # Transform dependency analysis
+    dep_data = report['dependency_analysis']
+    nodes = {
+        name: NodeInfo(
+            name=info['name'],
+            parents=info['parents'],
+            children=info['children'],
+            role=info['role']
+        )
+        for name, info in dep_data['nodes'].items()
+    }
+    
+    dependency_paths = [
+        DependencyPath(
+            path=path['path'],
+            length=path['length'],
+            description=path['description']
+        )
+        for path in dep_data['dependency_paths']
+    ]
+    
+    dependency_analysis = DependencyAnalysis(
+        nodes=nodes,
+        key_nodes=dep_data['key_nodes'],
+        dependency_paths=dependency_paths
+    )
+    
+    # Transform edge explanations
+    edge_explanations = [
+        EdgeExplanation(
+            parent=edge['parent'],
+            child=edge['child'],
+            edge_type=edge['type'],
+            strength=edge['strength'],
+            reasoning=edge['reasoning'],
+            financial_theory=edge['financial_theory'],
+            empirical_support=edge['empirical_support'],
+            causal_mechanism=edge['causal_mechanism']
+        )
+        for edge in report['edge_explanations']
+    ]
+    
+    # Transform structure validation
+    val_data = report['structure_validation']
+    structure_validation = StructureValidation(
+        is_valid_dag=val_data['is_valid_dag'],
+        has_cycles=val_data['has_cycles'],
+        correlation_support=val_data['correlation_support'],
+        missing_edges=val_data['missing_edges'],
+        validation_summary=val_data['validation_summary']
+    )
+    
+    # Transform network summary
+    summary_data = report['network_summary']
+    network_summary = NetworkSummary(
+        total_nodes=summary_data['total_nodes'],
+        total_edges=summary_data['total_edges'],
+        is_dag=summary_data['is_dag'],
+        description=summary_data['description']
+    )
+    
+    return StructureAnalysisResponse(
+        timestamp=report['timestamp'],
+        correlation_matrix=correlation_matrix,
+        dependency_analysis=dependency_analysis,
+        edge_explanations=edge_explanations,
+        structure_validation=structure_validation,
+        network_summary=network_summary
     )
