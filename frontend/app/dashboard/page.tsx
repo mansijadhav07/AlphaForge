@@ -53,12 +53,14 @@ export default function DashboardPage() {
 
   if (loading || !marketData) {
     return (
-      <div className="container mx-auto px-4 py-8 space-y-8">
-        <div className="space-y-2">
-          <div className="h-10 w-64 skeleton" />
+      <div className="page-container">
+        <div className="page-header">
+          <div className="h-10 w-64 skeleton mb-3" />
           <div className="h-5 w-96 skeleton" />
         </div>
-        <SkeletonStats />
+        <div className="card-grid-4 mb-8">
+          <SkeletonStats />
+        </div>
         <SkeletonCard />
         <SkeletonCard />
       </div>
@@ -69,30 +71,30 @@ export default function DashboardPage() {
   const volatilityTrend = marketData.volatility_index > 20 ? 'up' : 'neutral'
 
   return (
-    <div className="container mx-auto px-4 py-8 space-y-8">
-      {/* Header with Premium Animation */}
+    <div className="page-container">
+      {/* Header */}
       <motion.div 
-        className="space-y-2"
+        className="page-header"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
+        transition={{ duration: 0.5 }}
       >
-        <div className="flex items-center gap-3">
-          <h1 className="text-5xl font-bold gradient-text">Market Dashboard</h1>
+        <div className="flex items-center gap-3 mb-3">
+          <h1 className="page-title">Market Dashboard</h1>
           <motion.div
             animate={{ rotate: 360 }}
             transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
           >
-            <Sparkles className="w-8 h-8 text-neon-blue" />
+            <Sparkles className="w-7 h-7 text-cyan-400" />
           </motion.div>
         </div>
-        <p className="text-muted-premium text-lg">
+        <p className="page-description">
           Real-time market intelligence powered by probabilistic graphical models
         </p>
       </motion.div>
 
-      {/* Premium Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {/* Stats Grid */}
+      <div className="card-grid-4 mb-8">
         <StatCard
           title="Market Regime"
           value={marketData.market_regime}
@@ -124,21 +126,22 @@ export default function DashboardPage() {
         />
       </div>
 
-      {/* Top Stocks - Premium Card */}
+      {/* Top Stocks */}
       <motion.div
+        className="section"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.4 }}
+        transition={{ duration: 0.5, delay: 0.3 }}
       >
-        <Card className="glass-card border-0 overflow-hidden">
-          <div className="absolute inset-0 bg-mesh opacity-30" />
-          <CardHeader className="relative">
-            <CardTitle className="text-2xl font-bold flex items-center gap-2">
-              <TrendingUp className="w-6 h-6 text-neon-blue" />
+        <div className="glass-card glass-hover">
+          <div className="card-header">
+            <h2 className="card-title flex items-center gap-2">
+              <TrendingUp className="w-5 h-5 text-cyan-400" />
               Top Performing Stocks
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="relative">
+            </h2>
+            <p className="card-subtitle">Live market data with real-time updates</p>
+          </div>
+          <div className="card-body">
             <motion.div 
               className="space-y-3"
               variants={container}
@@ -147,42 +150,28 @@ export default function DashboardPage() {
             >
               {marketData.top_stocks.map((stock, index) => (
                 <motion.div key={stock.ticker} variants={item}>
-                  <Link
-                    href={`/stock/${stock.ticker}`}
-                    className="block"
-                  >
+                  <Link href={`/stock/${stock.ticker}`} className="block">
                     <motion.div
-                      className="flex items-center justify-between p-5 rounded-xl glass-hover group relative overflow-hidden"
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
+                      className="flex items-center justify-between p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-cyan-500/30 transition-all duration-200 group"
+                      whileHover={{ scale: 1.01, x: 4 }}
+                      whileTap={{ scale: 0.99 }}
                     >
-                      {/* Animated background gradient */}
-                      <div className="absolute inset-0 bg-gradient-to-r from-neon-blue/0 via-neon-blue/5 to-neon-blue/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                      
-                      <div className="flex items-center space-x-4 relative z-10">
-                        <motion.div 
-                          className="w-14 h-14 rounded-xl bg-gradient-to-br from-neon-blue/20 to-neon-teal/20 flex items-center justify-center font-bold text-lg group-hover:from-neon-blue/40 group-hover:to-neon-teal/40 transition-all duration-300"
-                          whileHover={{ rotate: 5 }}
-                        >
+                      <div className="flex items-center space-x-4">
+                        <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-cyan-500/20 to-teal-500/20 flex items-center justify-center font-bold text-base border border-cyan-500/20">
                           {stock.ticker.slice(0, 2)}
-                        </motion.div>
+                        </div>
                         <div>
-                          <div className="font-bold text-lg">{stock.ticker}</div>
-                          <div className="text-sm text-muted-foreground">
+                          <div className="font-semibold text-base text-white">{stock.ticker}</div>
+                          <div className="text-sm text-gray-400">
                             {formatCurrency(stock.price)}
                           </div>
                         </div>
                       </div>
-                      <div className="text-right relative z-10">
-                        <motion.div 
-                          className={`font-bold text-lg ${getChangeColor(stock.change)}`}
-                          initial={{ opacity: 0, x: 10 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: index * 0.1 }}
-                        >
+                      <div className="text-right">
+                        <div className={`font-semibold text-base ${getChangeColor(stock.change)}`}>
                           {stock.change > 0 ? '+' : ''}{formatCurrency(stock.change)}
-                        </motion.div>
-                        <div className={`text-sm font-semibold ${getChangeColor(stock.change)}`}>
+                        </div>
+                        <div className={`text-sm ${getChangeColor(stock.change)}`}>
                           {stock.change > 0 ? '+' : ''}{formatPercentage(stock.change_pct)}
                         </div>
                       </div>
@@ -191,25 +180,26 @@ export default function DashboardPage() {
                 </motion.div>
               ))}
             </motion.div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </motion.div>
 
-      {/* Trading Signals - Premium Card */}
+      {/* Trading Signals */}
       <motion.div
+        className="section"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.5 }}
+        transition={{ duration: 0.5, delay: 0.4 }}
       >
-        <Card className="glass-card border-0 overflow-hidden">
-          <div className="absolute inset-0 bg-mesh opacity-30" />
-          <CardHeader className="relative">
-            <CardTitle className="text-2xl font-bold flex items-center gap-2">
-              <Sparkles className="w-6 h-6 text-neon-teal" />
+        <div className="glass-card glass-hover">
+          <div className="card-header">
+            <h2 className="card-title flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-teal-400" />
               AI-Powered Trading Signals
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="relative">
+            </h2>
+            <p className="card-subtitle">Probabilistic predictions with confidence scores</p>
+          </div>
+          <div className="card-body">
             <motion.div 
               className="space-y-3"
               variants={container}
@@ -220,52 +210,40 @@ export default function DashboardPage() {
                 <motion.div
                   key={index}
                   variants={item}
-                  className="flex items-start justify-between p-5 rounded-xl glass-hover group relative overflow-hidden"
+                  className="flex items-start justify-between p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-teal-500/30 transition-all duration-200"
                   whileHover={{ x: 4 }}
                 >
-                  <div className="absolute inset-0 bg-gradient-to-r from-neon-teal/0 via-neon-teal/5 to-neon-teal/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                  
-                  <div className="flex items-start space-x-4 flex-1 relative z-10">
-                    <motion.div
-                      whileHover={{ scale: 1.1 }}
-                      transition={{ type: "spring", stiffness: 400 }}
-                    >
-                      <Badge className={`${getSignalColor(signal.signal)} px-3 py-1 text-sm font-semibold`}>
-                        {signal.signal}
-                      </Badge>
-                    </motion.div>
+                  <div className="flex items-start space-x-4 flex-1">
+                    <Badge className={`${getSignalColor(signal.signal)} px-3 py-1 text-xs font-semibold`}>
+                      {signal.signal}
+                    </Badge>
                     <div className="flex-1">
                       <div className="flex items-center space-x-3 mb-2">
-                        <span className="font-bold text-lg">{signal.ticker}</span>
+                        <span className="font-semibold text-base text-white">{signal.ticker}</span>
                         <div className="flex items-center gap-2">
-                          <div className="h-2 w-2 rounded-full bg-neon-blue animate-pulse" />
-                          <span className="text-sm text-muted-foreground font-medium">
+                          <div className="h-1.5 w-1.5 rounded-full bg-cyan-400 animate-pulse" />
+                          <span className="text-xs text-gray-400 font-medium">
                             {(signal.confidence * 100).toFixed(0)}% confidence
                           </span>
                         </div>
                       </div>
-                      <p className="text-sm text-muted-premium leading-relaxed">
+                      <p className="text-sm text-gray-400 leading-relaxed">
                         {signal.reason}
                       </p>
                     </div>
                   </div>
                   <Link
                     href={`/stock/${signal.ticker}`}
-                    className="text-sm font-semibold text-neon-blue hover:text-neon-teal transition-colors relative z-10 flex items-center gap-1 group-hover:gap-2 transition-all"
+                    className="text-sm font-semibold text-cyan-400 hover:text-teal-400 transition-colors flex items-center gap-1"
                   >
-                    Analyze
-                    <motion.span
-                      animate={{ x: [0, 4, 0] }}
-                      transition={{ duration: 1.5, repeat: Infinity }}
-                    >
-                      →
-                    </motion.span>
+                    View
+                    <span>→</span>
                   </Link>
                 </motion.div>
               ))}
             </motion.div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </motion.div>
     </div>
   )
