@@ -233,10 +233,10 @@ async def get_backtest_results(strategy: str, ticker: str = "AAPL"):
     """
     Get backtesting results for a strategy.
     
-    Returns REAL DATA from precomputed backtest results or runs backtest.
+    Returns REAL DATA from precomputed backtest results.
     
     Args:
-        strategy: Strategy name (e.g., RSI_Strategy, MACD_Strategy, PGM_Strategy)
+        strategy: Strategy name (e.g., rsi, macd, trend, bb)
         ticker: Stock ticker symbol
         
     Returns:
@@ -245,20 +245,86 @@ async def get_backtest_results(strategy: str, ticker: str = "AAPL"):
     try:
         logger.info(f"Fetching backtest results for {strategy} on {ticker}")
         
-        # Try to load precomputed backtest results
-        backtest_file = Path(f'data/backtests/{ticker}_{strategy}.json')
+        # Map frontend strategy names to backend strategy names
+        strategy_map = {
+            'rsi': 'RSI_Strategy',
+            'macd': 'MACD_Strategy',
+            'trend': 'Trend_Strategy',
+            'bb': 'BB_Strategy',
+            'pgm': 'PGM_Strategy'
+        }
         
-        if backtest_file.exists():
-            logger.info(f"Loading precomputed backtest for {strategy} on {ticker}")
-            with open(backtest_file, 'r') as f:
-                results = json.load(f)
+        strategy_name = strategy_map.get(strategy.lower(), strategy)
+        
+        # Try to load precomputed backtest results from Parquet
+        history_file = Path(f'data/backtesting/{strategy_name}_history.parquet')
+        metrics_file = Path(f'data/backtesting/{strategy_name}_metrics.txt')
+        
+        if history_file.exists():
+            logger.info(f"Loading backtest history for {strategy_name}")
+            
+            # Read the equity curve from Parquet
+            import pandas as pd
+            df = pd.read_parquet(history_file)
+            
+            # Extract equity curve data
+            equity_curve = []
+            for _, row in df.iterrows():
+                date_val = row['date']
+                # Convert to string format
+                if hasattr(date_val, 'strftime'):
+                    date_str = date_val.strftime('%Y-%m-%d')
+                else:
+                    date_str = str(date_val).split(' ')[0]  # Get just the date part
+                
+                equity_curve.append({
+                    'date': date_str,
+                    'value': float(row['portfolio_value'])
+                })
+            
+            # Calculate metrics from the data
+            initial_capital = float(df['portfolio_value'].iloc[0])
+            final_value = float(df['portfolio_value'].iloc[-1])
+            total_return = (final_value - initial_capital) / initial_capital
+            
+            # Calculate Sharpe ratio from returns
+            returns = df['portfolio_value'].pct_change().dropna()
+            sharpe_ratio = (returns.mean() / returns.std() * (252 ** 0.5)) if returns.std() > 0 else 0.0
+            
+            # Calculate max drawdown
+            cumulative = df['portfolio_value']
+            running_max = cumulative.expanding().max()
+            drawdown = (cumulative - running_max) / running_max
+            max_drawdown = float(drawdown.min())
+            
+            # Count trades (approximate from signal changes)
+            num_trades = int(df['signal'].diff().abs().sum() / 2) if 'signal' in df.columns else 0
+            
+            # Calculate win rate (approximate)
+            daily_returns = df['portfolio_value'].pct_change()
+            winning_days = (daily_returns > 0).sum()
+            total_days = len(daily_returns.dropna())
+            win_rate = float(winning_days / total_days) if total_days > 0 else 0.5
+            
+            results = {
+                'strategy': strategy_name,
+                'ticker': ticker,
+                'initial_capital': initial_capital,
+                'final_value': final_value,
+                'total_return': total_return,
+                'sharpe_ratio': float(sharpe_ratio),
+                'max_drawdown': max_drawdown,
+                'win_rate': win_rate,
+                'num_trades': num_trades,
+                'equity_curve': equity_curve
+            }
+            
             return results
         
         # If no precomputed results, return error
-        # (Running backtests on-demand is expensive, should be precomputed)
         raise HTTPException(
             status_code=404,
-            detail=f"No backtest results found for {strategy} on {ticker}. Please run backtest script first."
+            detail=f"No backtest results found for {strategy} ({strategy_name}). Available strategies: {', '.join(strategy_map.keys())}"
         )
         
     except HTTPException:

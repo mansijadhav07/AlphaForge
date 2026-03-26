@@ -47,9 +47,15 @@ export default function BacktestingPage() {
 
   const runBacktest = async () => {
     setLoading(true)
-    const data = await api.getBacktestResults(selectedStrategy, selectedTicker)
-    setResults(data)
-    setLoading(false)
+    try {
+      const data = await api.getBacktestResults(selectedStrategy, selectedTicker)
+      console.log('Backtest data received:', data)
+      setResults(data)
+    } catch (error) {
+      console.error('Error fetching backtest:', error)
+    } finally {
+      setLoading(false)
+    }
   }
 
   const runComparison = async () => {
@@ -221,11 +227,24 @@ export default function BacktestingPage() {
               <CardTitle>Equity Curve</CardTitle>
             </CardHeader>
             <CardContent>
-              <EquityCurveChart
-                data={results.equity_curve}
-                initialCapital={results.initial_capital}
-                showBuyHold={true}
-              />
+              {results.equity_curve && results.equity_curve.length > 0 ? (
+                <>
+                  <div className="text-xs text-gray-500 mb-2">
+                    Data points: {results.equity_curve.length} | 
+                    Range: ${Math.min(...results.equity_curve.map(p => p.value)).toFixed(2)} - 
+                    ${Math.max(...results.equity_curve.map(p => p.value)).toFixed(2)}
+                  </div>
+                  <EquityCurveChart
+                    data={results.equity_curve}
+                    initialCapital={results.initial_capital}
+                    showBuyHold={true}
+                  />
+                </>
+              ) : (
+                <div className="text-gray-400 text-center py-8">
+                  No equity curve data available
+                </div>
+              )}
             </CardContent>
           </Card>
 

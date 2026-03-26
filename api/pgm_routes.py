@@ -10,6 +10,7 @@ from datetime import datetime
 from pathlib import Path
 import pandas as pd
 import numpy as np
+import json
 
 from api.schemas import (
     ProbabilityResponse,
@@ -559,57 +560,33 @@ async def get_model_evaluation(
     try:
         logger.info(f"Getting model evaluation for {symbol}")
         
-        # Try to load cached results first
+        # Load precomputed evaluation results
         from pgm_model.evaluation import ModelEvaluator
-        evaluator = ModelEvaluator()
+        evaluator = ModelEvaluator(results_dir="data/evaluation")
         
-        cached_results = evaluator.load_results(symbol)
+        # Try to load from standard location
+        eval_file = Path(f"data/evaluation/{symbol}_evaluation.json")
         
-        if cached_results:
-            logger.info(f"Returning cached evaluation results for {symbol}")
-            return ModelEvaluationResponse(
-                symbol=symbol,
-                **cached_results
-            )
-        
-        # If no cached results, perform evaluation on available data
-        # Get historical features
-        from feature_store.offline_store import OfflineFeatureStore
-        offline_store = OfflineFeatureStore()
-        
-        try:
-            features_df = offline_store.read_features('market_features', version='v1')
+        if eval_file.exists():
+            logger.info(f"Loading precomputed evaluation for {symbol}")
+            with open(eval_file, 'r') as f:
+                results = json.load(f)
             
-            # Filter for symbol
-            if 'ticker' in features_df.columns:
-                features_df = features_df[features_df['ticker'] == symbol]
-            
-            if len(features_df) < lookback_periods + 10:
-                raise HTTPException(
-                    status_code=404,
-                    detail=f"Insufficient historical data for {symbol}"
-                )
-            
-            # Perform evaluation
-            results = evaluator.evaluate_model_on_historical_data(
-                pgm_service.state_encoder,
-                pgm_service.inference_engine,
-                features_df,
-                lookback_periods=lookback_periods
-            )
-            
-            # Save results
-            evaluator.save_results(results, symbol)
+            # Remove symbol from results if it exists (will be added by response model)
+            if 'symbol' in results:
+                del results['symbol']
             
             return ModelEvaluationResponse(
                 symbol=symbol,
                 **results
             )
-            
-        except Exception as e:
-            logger.warning(f"Could not evaluate on historical data: {e}")
-            # Return mock data for development
-            return _get_mock_evaluation(symbol)
+        
+        # If no precomputed results, return 404
+        logger.warning(f"No evaluation data found for {symbol}")
+        raise HTTPException(
+            status_code=404,
+            detail=f"Evaluation data not available for {symbol}. Please run: python3 scripts/generate_evaluation_data.py --symbols {symbol}"
+        )
         
     except HTTPException:
         raise
