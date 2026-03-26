@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { Activity, BarChart3, Brain, TrendingUp, Network, Target, CheckCircle2, AlertTriangle, GitBranch, Layers } from 'lucide-react'
+import { Activity, BarChart3, Brain, TrendingUp, Network, Target, CheckCircle2, AlertTriangle, GitBranch, Layers, Scale } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const navigation = [
@@ -14,6 +14,7 @@ const navigation = [
   { name: 'PGM Graph', href: '/pgm-graph', icon: Network },
   { name: 'Structure', href: '/structure-analysis', icon: GitBranch },
   { name: 'Discretization', href: '/discretization', icon: Layers },
+  { name: 'Baselines', href: '/baseline-comparison', icon: Scale },
   { name: 'Feature Impact', href: '/feature-impact', icon: Target },
   { name: 'Model Eval', href: '/model-evaluation', icon: CheckCircle2 },
   { name: 'Failures', href: '/model-failures', icon: AlertTriangle },
