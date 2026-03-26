@@ -784,3 +784,61 @@ class StructureAnalysisResponse(BaseModel):
                 "network_summary": {}
             }
         }
+
+
+# ============================================================================
+# Baseline Comparison Schemas
+# ============================================================================
+
+class ModelMetricsResponse(BaseModel):
+    """Metrics for a single model"""
+    model_name: str
+    accuracy: float
+    precision: float
+    recall: float
+    f1_score: float
+    log_loss: Optional[float]
+    confusion_matrix: List[List[int]]
+    training_time: float
+    prediction_time: float
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "model_name": "Logistic Regression",
+                "accuracy": 0.65,
+                "precision": 0.64,
+                "recall": 0.65,
+                "f1_score": 0.64,
+                "log_loss": 0.85,
+                "confusion_matrix": [[20, 5, 3], [4, 25, 6], [2, 7, 28]],
+                "training_time": 0.15,
+                "prediction_time": 0.01
+            }
+        }
+
+
+class BaselineComparisonResponse(BaseModel):
+    """Complete baseline comparison response"""
+    symbol: str
+    timestamp: str
+    models: Dict[str, ModelMetricsResponse]
+    summary: List[Dict[str, any]]
+    best_model: Dict[str, any]
+    winner: str
+    improvement_over_random: float
+    improvement_over_majority: float
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "symbol": "AAPL",
+                "timestamp": "2026-03-26T10:30:00",
+                "models": {},
+                "summary": [],
+                "best_model": {"name": "PGM", "accuracy": 0.72},
+                "winner": "PGM (Bayesian Network)",
+                "improvement_over_random": 0.39,
+                "improvement_over_majority": 0.15
+            }
+        }
