@@ -68,7 +68,7 @@ export function Navbar() {
           </Link>
 
           {/* Premium Navigation */}
-          <div className="hidden md:flex items-center space-x-1">
+          <div className="hidden md:flex items-center space-x-0.5">
             {navigation.map((item, index) => {
               const isActive = pathname?.startsWith(item.href)
               const Icon = item.icon
@@ -86,7 +86,7 @@ export function Navbar() {
                   >
                     <motion.div
                       className={cn(
-                        'flex items-center space-x-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-300 relative overflow-hidden',
+                        'flex items-center space-x-1.5 px-2.5 py-2 rounded-lg text-xs font-semibold transition-all duration-300 relative overflow-hidden',
                         isActive
                           ? 'text-neon-blue'
                           : 'text-muted-foreground hover:text-foreground'
@@ -97,7 +97,7 @@ export function Navbar() {
                       {/* Active indicator background */}
                       {isActive && (
                         <motion.div
-                          className="absolute inset-0 bg-gradient-to-r from-neon-blue/20 via-neon-teal/20 to-neon-blue/20 rounded-xl"
+                          className="absolute inset-0 bg-gradient-to-r from-neon-blue/20 via-neon-teal/20 to-neon-blue/20 rounded-lg"
                           layoutId="activeNav"
                           transition={{ 
                             type: "spring", 
@@ -109,13 +109,13 @@ export function Navbar() {
                       
                       {/* Hover effect */}
                       <motion.div
-                        className="absolute inset-0 bg-white/5 rounded-xl opacity-0"
+                        className="absolute inset-0 bg-white/5 rounded-lg opacity-0"
                         whileHover={{ opacity: 1 }}
                         transition={{ duration: 0.2 }}
                       />
                       
                       <Icon className={cn(
-                        "h-4 w-4 relative z-10 transition-transform duration-300",
+                        "h-3.5 w-3.5 relative z-10 transition-transform duration-300",
                         isActive && "animate-pulse"
                       )} />
                       <span className="relative z-10">{item.name}</span>
