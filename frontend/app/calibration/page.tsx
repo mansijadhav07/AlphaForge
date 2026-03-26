@@ -154,8 +154,8 @@ export default function CalibrationPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Probability Calibration</h1>
-          <p className="text-gray-600 mt-1">
+          <h1 className="text-3xl font-bold text-white">Probability Calibration</h1>
+          <p className="text-gray-300 mt-1">
             Analyze how well predicted probabilities match actual outcomes
           </p>
         </div>
@@ -171,26 +171,26 @@ export default function CalibrationPage() {
       </div>
 
       {/* Overall Assessment */}
-      <Card className="p-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+      <Card className="p-6 bg-gradient-to-r from-blue-900/30 to-indigo-900/30 border-blue-700/50">
         <div className="flex items-start gap-4">
-          <div className="p-3 bg-blue-100 rounded-lg">
-            <Target className="w-6 h-6 text-blue-600" />
+          <div className="p-3 bg-blue-800/50 rounded-lg">
+            <Target className="w-6 h-6 text-blue-300" />
           </div>
           <div className="flex-1">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Overall Assessment</h3>
-            <p className="text-gray-700 text-lg">{data.interpretation.overall}</p>
+            <h3 className="text-lg font-semibold text-white mb-2">Overall Assessment</h3>
+            <p className="text-gray-200 text-lg">{data.interpretation.overall}</p>
             <div className="mt-4 grid grid-cols-3 gap-4">
               <div>
-                <p className="text-sm text-gray-600">Total Samples</p>
-                <p className="text-2xl font-bold text-gray-900">{data.summary.total_samples}</p>
+                <p className="text-sm text-gray-400">Total Samples</p>
+                <p className="text-2xl font-bold text-white">{data.summary.total_samples}</p>
               </div>
               <div>
-                <p className="text-sm text-gray-600">Positive Rate</p>
-                <p className="text-2xl font-bold text-gray-900">{(data.summary.positive_rate * 100).toFixed(1)}%</p>
+                <p className="text-sm text-gray-400">Positive Rate</p>
+                <p className="text-2xl font-bold text-white">{(data.summary.positive_rate * 100).toFixed(1)}%</p>
               </div>
               <div>
-                <p className="text-sm text-gray-600">Mean Predicted</p>
-                <p className="text-2xl font-bold text-gray-900">{(data.summary.mean_predicted_prob * 100).toFixed(1)}%</p>
+                <p className="text-sm text-gray-400">Mean Predicted</p>
+                <p className="text-2xl font-bold text-white">{(data.summary.mean_predicted_prob * 100).toFixed(1)}%</p>
               </div>
             </div>
           </div>
@@ -200,11 +200,11 @@ export default function CalibrationPage() {
       {/* Calibration Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* ECE Card */}
-        <Card className="p-6">
+        <Card className="p-6 bg-gray-800/50 border-gray-700">
           <div className="flex items-start justify-between mb-4">
             <div>
-              <h3 className="text-lg font-semibold text-gray-900">Expected Calibration Error</h3>
-              <p className="text-sm text-gray-600 mt-1">Lower is better (0 = perfect)</p>
+              <h3 className="text-lg font-semibold text-white">Expected Calibration Error</h3>
+              <p className="text-sm text-gray-400 mt-1">Lower is better (0 = perfect)</p>
             </div>
             <Badge className={getQualityColor(data.interpretation.ece.quality)}>
               <div className="flex items-center gap-1">
@@ -215,16 +215,16 @@ export default function CalibrationPage() {
           </div>
           <div className="space-y-3">
             <div className="flex items-baseline gap-2">
-              <span className="text-4xl font-bold text-gray-900">
+              <span className="text-4xl font-bold text-white">
                 {(data.calibration_curve.metrics.ece * 100).toFixed(2)}%
               </span>
-              <span className="text-gray-600">ECE</span>
+              <span className="text-gray-400">ECE</span>
             </div>
-            <p className="text-gray-700">{data.interpretation.ece.description}</p>
-            <div className="pt-3 border-t">
+            <p className="text-gray-300">{data.interpretation.ece.description}</p>
+            <div className="pt-3 border-t border-gray-700">
               <div className="flex justify-between text-sm">
-                <span className="text-gray-600">Reliability Score</span>
-                <span className="font-semibold text-gray-900">
+                <span className="text-gray-400">Reliability Score</span>
+                <span className="font-semibold text-white">
                   {(data.calibration_curve.metrics.reliability_score * 100).toFixed(1)}%
                 </span>
               </div>
@@ -233,11 +233,11 @@ export default function CalibrationPage() {
         </Card>
 
         {/* Brier Score Card */}
-        <Card className="p-6">
+        <Card className="p-6 bg-gray-800/50 border-gray-700">
           <div className="flex items-start justify-between mb-4">
             <div>
-              <h3 className="text-lg font-semibold text-gray-900">Brier Score</h3>
-              <p className="text-sm text-gray-600 mt-1">Measures prediction accuracy</p>
+              <h3 className="text-lg font-semibold text-white">Brier Score</h3>
+              <p className="text-sm text-gray-400 mt-1">Measures prediction accuracy</p>
             </div>
             <Badge className={getQualityColor(data.interpretation.brier.quality)}>
               <div className="flex items-center gap-1">
@@ -248,16 +248,16 @@ export default function CalibrationPage() {
           </div>
           <div className="space-y-3">
             <div className="flex items-baseline gap-2">
-              <span className="text-4xl font-bold text-gray-900">
+              <span className="text-4xl font-bold text-white">
                 {data.calibration_curve.metrics.brier_score.toFixed(3)}
               </span>
-              <span className="text-gray-600">Score</span>
+              <span className="text-gray-400">Score</span>
             </div>
-            <p className="text-gray-700">{data.interpretation.brier.description}</p>
-            <div className="pt-3 border-t space-y-2">
+            <p className="text-gray-300">{data.interpretation.brier.description}</p>
+            <div className="pt-3 border-t border-gray-700 space-y-2">
               <div className="flex justify-between text-sm">
-                <span className="text-gray-600">Log Loss</span>
-                <span className="font-semibold text-gray-900">
+                <span className="text-gray-400">Log Loss</span>
+                <span className="font-semibold text-white">
                   {data.calibration_curve.metrics.log_loss.toFixed(3)}
                 </span>
               </div>
@@ -273,9 +273,9 @@ export default function CalibrationPage() {
       </div>
 
       {/* Calibration Curve */}
-      <Card className="p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Calibration Curve</h3>
-        <p className="text-sm text-gray-600 mb-6">
+      <Card className="p-6 bg-gray-800/50 border-gray-700">
+        <h3 className="text-lg font-semibold text-white mb-4">Calibration Curve</h3>
+        <p className="text-sm text-gray-400 mb-6">
           Points closer to the diagonal line indicate better calibration
         </p>
         <ResponsiveContainer width="100%" height={400}>
@@ -326,33 +326,33 @@ export default function CalibrationPage() {
       </Card>
 
       {/* Reliability Diagram Details */}
-      <Card className="p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Calibration Bins</h3>
+      <Card className="p-6 bg-gray-800/50 border-gray-700">
+        <h3 className="text-lg font-semibold text-white mb-4">Calibration Bins</h3>
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b">
-                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Predicted Prob</th>
-                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Actual Freq</th>
-                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Gap</th>
-                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Count</th>
-                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Confidence Interval</th>
+              <tr className="border-b border-gray-700">
+                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-300">Predicted Prob</th>
+                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-300">Actual Freq</th>
+                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-300">Gap</th>
+                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-300">Count</th>
+                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-300">Confidence Interval</th>
               </tr>
             </thead>
             <tbody>
               {data.calibration_curve.bins.map((bin, idx) => {
                 const gap = Math.abs(bin.predicted_prob - bin.actual_freq);
-                const gapColor = gap < 0.05 ? 'text-green-600' : gap < 0.10 ? 'text-yellow-600' : 'text-red-600';
+                const gapColor = gap < 0.05 ? 'text-green-400' : gap < 0.10 ? 'text-yellow-400' : 'text-red-400';
                 
                 return (
-                  <tr key={idx} className="border-b hover:bg-gray-50">
-                    <td className="py-3 px-4 text-sm">{(bin.predicted_prob * 100).toFixed(1)}%</td>
-                    <td className="py-3 px-4 text-sm">{(bin.actual_freq * 100).toFixed(1)}%</td>
+                  <tr key={idx} className="border-b border-gray-700 hover:bg-gray-700/30">
+                    <td className="py-3 px-4 text-sm text-gray-300">{(bin.predicted_prob * 100).toFixed(1)}%</td>
+                    <td className="py-3 px-4 text-sm text-gray-300">{(bin.actual_freq * 100).toFixed(1)}%</td>
                     <td className={`py-3 px-4 text-sm font-semibold ${gapColor}`}>
                       {(gap * 100).toFixed(1)}%
                     </td>
-                    <td className="py-3 px-4 text-sm">{bin.count}</td>
-                    <td className="py-3 px-4 text-sm text-gray-600">
+                    <td className="py-3 px-4 text-sm text-gray-300">{bin.count}</td>
+                    <td className="py-3 px-4 text-sm text-gray-400">
                       [{(bin.confidence_lower * 100).toFixed(1)}%, {(bin.confidence_upper * 100).toFixed(1)}%]
                     </td>
                   </tr>
@@ -364,19 +364,19 @@ export default function CalibrationPage() {
       </Card>
 
       {/* Info Card */}
-      <Card className="p-6 bg-blue-50 border-blue-200">
-        <h3 className="text-lg font-semibold text-gray-900 mb-3">Understanding Calibration</h3>
-        <div className="space-y-2 text-sm text-gray-700">
+      <Card className="p-6 bg-blue-900/30 border-blue-700/50">
+        <h3 className="text-lg font-semibold text-white mb-3">Understanding Calibration</h3>
+        <div className="space-y-2 text-sm text-gray-300">
           <p>
-            <strong>Calibration</strong> measures how well predicted probabilities match actual outcomes.
+            <strong className="text-white">Calibration</strong> measures how well predicted probabilities match actual outcomes.
             A well-calibrated model predicting 70% probability should be correct 70% of the time.
           </p>
           <p>
-            <strong>Expected Calibration Error (ECE)</strong> is the average difference between predicted
+            <strong className="text-white">Expected Calibration Error (ECE)</strong> is the average difference between predicted
             probabilities and actual frequencies across all bins. Lower is better.
           </p>
           <p>
-            <strong>Brier Score</strong> measures the accuracy of probabilistic predictions.
+            <strong className="text-white">Brier Score</strong> measures the accuracy of probabilistic predictions.
             It ranges from 0 (perfect) to 1 (worst).
           </p>
         </div>

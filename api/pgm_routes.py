@@ -9,6 +9,7 @@ from typing import Dict, List, Optional
 from datetime import datetime
 from pathlib import Path
 import pandas as pd
+import numpy as np
 
 from api.schemas import (
     ProbabilityResponse,
