@@ -842,3 +842,40 @@ class BaselineComparisonResponse(BaseModel):
                 "improvement_over_majority": 0.15
             }
         }
+
+
+# Calibration Analysis Schemas
+class CalibrationBinResponse(BaseModel):
+    """Single bin in calibration curve."""
+    predicted_prob: float
+    actual_freq: float
+    count: int
+    confidence_lower: float
+    confidence_upper: float
+    gap: Optional[float] = None
+
+
+class CalibrationMetricsResponse(BaseModel):
+    """Calibration quality metrics."""
+    ece: float  # Expected Calibration Error
+    mce: float  # Maximum Calibration Error
+    brier_score: float
+    log_loss: float
+    reliability_score: float
+
+
+class CalibrationInterpretation(BaseModel):
+    """Human-readable calibration interpretation."""
+    ece: Dict[str, Any]
+    brier: Dict[str, Any]
+    overall: str
+
+
+class CalibrationAnalysisResponse(BaseModel):
+    """Complete calibration analysis response."""
+    symbol: str
+    timestamp: str
+    calibration_curve: Dict[str, Any]
+    reliability_diagram: Dict[str, Any]
+    interpretation: CalibrationInterpretation
+    summary: Dict[str, Any]
