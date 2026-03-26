@@ -11,7 +11,6 @@ import {
   Eye,
   BarChart3,
 } from 'lucide-react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { InsightCard } from '@/components/ui/insight-card'
 import { StatCard } from '@/components/ui/stat-card'
@@ -55,43 +54,42 @@ export default function InsightsPage() {
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="animate-pulse space-y-6">
-          <div className="h-8 bg-white/10 rounded w-1/4" />
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="h-32 bg-white/10 rounded" />
-            ))}
-          </div>
-          <div className="space-y-4">
-            {[...Array(3)].map((_, i) => (
-              <div key={i} className="h-40 bg-white/10 rounded" />
-            ))}
-          </div>
+      <div className="page-container">
+        <div className="page-header">
+          <div className="h-10 w-64 skeleton mb-3" />
+          <div className="h-5 w-96 skeleton" />
+        </div>
+        <div className="card-grid-4 mb-8">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="h-32 skeleton" />
+          ))}
+        </div>
+        <div className="space-y-4">
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="h-40 skeleton" />
+          ))}
         </div>
       </div>
     )
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 space-y-8 animate-slide-in">
+    <div className="page-container">
       {/* Header */}
-      <div className="space-y-2">
-        <div className="flex items-center space-x-3">
-          <div className="p-3 rounded-xl bg-gradient-to-br from-neon-blue/20 to-neon-teal/20">
-            <Brain className="h-8 w-8 text-neon-blue" />
+      <div className="page-header">
+        <div className="flex items-center space-x-3 mb-3">
+          <div className="p-2.5 rounded-lg bg-gradient-to-br from-cyan-500/20 to-teal-500/20 border border-cyan-500/20">
+            <Brain className="h-6 w-6 text-cyan-400" />
           </div>
-          <div>
-            <h1 className="text-4xl font-bold gradient-text">Market Insights</h1>
-            <p className="text-muted-foreground">
-              AI-powered analysis and opportunity detection
-            </p>
-          </div>
+          <h1 className="page-title">Market Insights</h1>
         </div>
+        <p className="page-description">
+          AI-powered analysis and opportunity detection
+        </p>
       </div>
 
       {/* Stats Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="card-grid-4 mb-8">
         <StatCard
           title="Total Insights"
           value={insightCounts.total}
@@ -120,120 +118,122 @@ export default function InsightsPage() {
 
       {/* Market Pulse */}
       {marketData && (
-        <Card className="border-neon-blue/30 card-glow">
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <Zap className="h-5 w-5 text-neon-blue" />
-              <span>Market Pulse</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Market Regime */}
-              <div className="space-y-2">
-                <div className="text-sm text-muted-foreground">Market Regime</div>
-                <div className="flex items-center space-x-2">
-                  <Badge
-                    variant={
-                      marketData.market_regime === 'Bull'
-                        ? 'bullish'
-                        : marketData.market_regime === 'Bear'
-                        ? 'bearish'
-                        : 'neutral'
-                    }
-                  >
-                    {marketData.market_regime}
-                  </Badge>
-                  <span className="text-2xl font-bold">{marketData.market_regime}</span>
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  {marketData.market_regime === 'Bull' && 'Upward momentum detected'}
-                  {marketData.market_regime === 'Bear' && 'Downward pressure observed'}
-                  {marketData.market_regime === 'Sideways' && 'Consolidation phase'}
-                </p>
-              </div>
-
-              {/* Volatility */}
-              <div className="space-y-2">
-                <div className="text-sm text-muted-foreground">Volatility Index</div>
-                <div className="text-2xl font-bold">{marketData.volatility_index.toFixed(2)}</div>
-                <div className="flex items-center space-x-2">
-                  <div className="flex-1 h-2 bg-white/5 rounded-full overflow-hidden">
-                    <div
-                      className={`h-full transition-all ${
-                        marketData.volatility_index > 25
-                          ? 'bg-bearish'
-                          : marketData.volatility_index > 15
-                          ? 'bg-neutral'
-                          : 'bg-bullish'
-                      }`}
-                      style={{ width: `${Math.min(marketData.volatility_index * 2, 100)}%` }}
-                    />
+        <div className="section">
+          <div className="glass-card glass-hover">
+            <div className="card-header">
+              <h2 className="card-title flex items-center gap-2">
+                <Zap className="h-5 w-5 text-cyan-400" />
+                Market Pulse
+              </h2>
+              <p className="card-subtitle">Real-time market conditions</p>
+            </div>
+            <div className="card-body">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* Market Regime */}
+                <div className="space-y-2">
+                  <div className="text-sm text-gray-400">Market Regime</div>
+                  <div className="flex items-center space-x-2">
+                    <Badge
+                      variant={
+                        marketData.market_regime === 'Bull'
+                          ? 'bullish'
+                          : marketData.market_regime === 'Bear'
+                          ? 'bearish'
+                          : 'neutral'
+                      }
+                    >
+                      {marketData.market_regime}
+                    </Badge>
                   </div>
-                  <span className="text-xs text-muted-foreground">
-                    {marketData.volatility_index > 25
-                      ? 'High'
-                      : marketData.volatility_index > 15
-                      ? 'Moderate'
-                      : 'Low'}
-                  </span>
+                  <p className="text-xs text-gray-500">
+                    {marketData.market_regime === 'Bull' && 'Upward momentum detected'}
+                    {marketData.market_regime === 'Bear' && 'Downward pressure observed'}
+                    {marketData.market_regime === 'Sideways' && 'Consolidation phase'}
+                  </p>
                 </div>
-              </div>
 
-              {/* Active Signals */}
-              <div className="space-y-2">
-                <div className="text-sm text-muted-foreground">Active Signals</div>
-                <div className="text-2xl font-bold">{marketData.signals.length}</div>
-                <div className="flex items-center space-x-2">
-                  <TrendingUp className="h-4 w-4 text-bullish" />
-                  <span className="text-xs text-muted-foreground">
-                    {marketData.signals.filter((s) => s.signal === 'BUY').length} Buy signals
-                  </span>
+                {/* Volatility */}
+                <div className="space-y-2">
+                  <div className="text-sm text-gray-400">Volatility Index</div>
+                  <div className="text-2xl font-bold text-white">{marketData.volatility_index.toFixed(2)}</div>
+                  <div className="flex items-center space-x-2">
+                    <div className="flex-1 h-2 bg-white/5 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full transition-all ${
+                          marketData.volatility_index > 25
+                            ? 'bg-bearish'
+                            : marketData.volatility_index > 15
+                            ? 'bg-neutral'
+                            : 'bg-bullish'
+                        }`}
+                        style={{ width: `${Math.min(marketData.volatility_index * 2, 100)}%` }}
+                      />
+                    </div>
+                    <span className="text-xs text-gray-500">
+                      {marketData.volatility_index > 25
+                        ? 'High'
+                        : marketData.volatility_index > 15
+                        ? 'Moderate'
+                        : 'Low'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Active Signals */}
+                <div className="space-y-2">
+                  <div className="text-sm text-gray-400">Active Signals</div>
+                  <div className="text-2xl font-bold text-white">{marketData.signals.length}</div>
+                  <div className="flex items-center space-x-2">
+                    <TrendingUp className="h-4 w-4 text-bullish" />
+                    <span className="text-xs text-gray-500">
+                      {marketData.signals.filter((s) => s.signal === 'BUY').length} Buy signals
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       )}
 
       {/* Filter Tabs */}
-      <div className="flex items-center space-x-2">
+      <div className="flex items-center space-x-2 mb-6">
         <button
           onClick={() => setFilter('all')}
-          className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+          className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
             filter === 'all'
-              ? 'bg-neon-blue/20 text-neon-blue'
-              : 'bg-white/5 text-muted-foreground hover:bg-white/10'
+              ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'
+              : 'bg-white/5 text-gray-400 hover:bg-white/10 border border-transparent'
           }`}
         >
           All ({insightCounts.total})
         </button>
         <button
           onClick={() => setFilter('warning')}
-          className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+          className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
             filter === 'warning'
-              ? 'bg-neutral/20 text-neutral'
-              : 'bg-white/5 text-muted-foreground hover:bg-white/10'
+              ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30'
+              : 'bg-white/5 text-gray-400 hover:bg-white/10 border border-transparent'
           }`}
         >
           Warnings ({insightCounts.warnings})
         </button>
         <button
           onClick={() => setFilter('success')}
-          className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+          className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
             filter === 'success'
-              ? 'bg-bullish/20 text-bullish'
-              : 'bg-white/5 text-muted-foreground hover:bg-white/10'
+              ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+              : 'bg-white/5 text-gray-400 hover:bg-white/10 border border-transparent'
           }`}
         >
           Opportunities ({insightCounts.opportunities})
         </button>
         <button
           onClick={() => setFilter('info')}
-          className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+          className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
             filter === 'info'
-              ? 'bg-neon-blue/20 text-neon-blue'
-              : 'bg-white/5 text-muted-foreground hover:bg-white/10'
+              ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'
+              : 'bg-white/5 text-gray-400 hover:bg-white/10 border border-transparent'
           }`}
         >
           Updates ({insightCounts.info})
@@ -241,80 +241,81 @@ export default function InsightsPage() {
       </div>
 
       {/* Insights List */}
-      <div className="space-y-4">
+      <div className="section">
         {filteredInsights.length === 0 ? (
-          <Card>
-            <CardContent className="pt-6">
-              <div className="text-center py-12">
-                <Eye className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-semibold mb-2">No insights found</h3>
-                <p className="text-sm text-muted-foreground">
-                  {filter === 'all'
-                    ? 'No insights available at the moment'
-                    : `No ${filter} insights found`}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+          <div className="glass-card text-center py-12">
+            <Eye className="h-12 w-12 text-gray-500 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-white mb-2">No insights found</h3>
+            <p className="text-sm text-gray-400">
+              {filter === 'all'
+                ? 'No insights available at the moment'
+                : `No ${filter} insights found`}
+            </p>
+          </div>
         ) : (
-          filteredInsights.map((insight) => (
-            <InsightCard key={insight.id} insight={insight} />
-          ))
+          <div className="space-y-4">
+            {filteredInsights.map((insight) => (
+              <InsightCard key={insight.id} insight={insight} />
+            ))}
+          </div>
         )}
       </div>
 
       {/* Quick Actions */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <BarChart3 className="h-5 w-5 text-neon-teal" />
-            <span>Quick Actions</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <button className="p-4 rounded-lg glass-hover text-left group">
-              <div className="flex items-center space-x-3">
-                <div className="p-2 rounded-lg bg-bullish/10 group-hover:bg-bullish/20 transition-colors">
-                  <TrendingUp className="h-5 w-5 text-bullish" />
-                </div>
-                <div>
-                  <div className="font-semibold">View Top Opportunities</div>
-                  <div className="text-xs text-muted-foreground">
-                    {insightCounts.opportunities} available
-                  </div>
-                </div>
-              </div>
-            </button>
-
-            <button className="p-4 rounded-lg glass-hover text-left group">
-              <div className="flex items-center space-x-3">
-                <div className="p-2 rounded-lg bg-neutral/10 group-hover:bg-neutral/20 transition-colors">
-                  <AlertTriangle className="h-5 w-5 text-neutral" />
-                </div>
-                <div>
-                  <div className="font-semibold">Review Warnings</div>
-                  <div className="text-xs text-muted-foreground">
-                    {insightCounts.warnings} alerts
-                  </div>
-                </div>
-              </div>
-            </button>
-
-            <button className="p-4 rounded-lg glass-hover text-left group">
-              <div className="flex items-center space-x-3">
-                <div className="p-2 rounded-lg bg-neon-blue/10 group-hover:bg-neon-blue/20 transition-colors">
-                  <Activity className="h-5 w-5 text-neon-blue" />
-                </div>
-                <div>
-                  <div className="font-semibold">Market Analysis</div>
-                  <div className="text-xs text-muted-foreground">Full report</div>
-                </div>
-              </div>
-            </button>
+      <div className="section">
+        <div className="glass-card glass-hover">
+          <div className="card-header">
+            <h2 className="card-title flex items-center gap-2">
+              <BarChart3 className="h-5 w-5 text-teal-400" />
+              Quick Actions
+            </h2>
+            <p className="card-subtitle">Common tasks and shortcuts</p>
           </div>
-        </CardContent>
-      </Card>
+          <div className="card-body">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <button className="p-4 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 hover:border-emerald-500/30 transition-all text-left group">
+                <div className="flex items-center space-x-3">
+                  <div className="p-2 rounded-lg bg-emerald-500/10 group-hover:bg-emerald-500/20 transition-colors">
+                    <TrendingUp className="h-5 w-5 text-emerald-400" />
+                  </div>
+                  <div>
+                    <div className="font-semibold text-white">View Top Opportunities</div>
+                    <div className="text-xs text-gray-400">
+                      {insightCounts.opportunities} available
+                    </div>
+                  </div>
+                </div>
+              </button>
+
+              <button className="p-4 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 hover:border-yellow-500/30 transition-all text-left group">
+                <div className="flex items-center space-x-3">
+                  <div className="p-2 rounded-lg bg-yellow-500/10 group-hover:bg-yellow-500/20 transition-colors">
+                    <AlertTriangle className="h-5 w-5 text-yellow-400" />
+                  </div>
+                  <div>
+                    <div className="font-semibold text-white">Review Warnings</div>
+                    <div className="text-xs text-gray-400">
+                      {insightCounts.warnings} alerts
+                    </div>
+                  </div>
+                </div>
+              </button>
+
+              <button className="p-4 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 hover:border-cyan-500/30 transition-all text-left group">
+                <div className="flex items-center space-x-3">
+                  <div className="p-2 rounded-lg bg-cyan-500/10 group-hover:bg-cyan-500/20 transition-colors">
+                    <Activity className="h-5 w-5 text-cyan-400" />
+                  </div>
+                  <div>
+                    <div className="font-semibold text-white">Market Analysis</div>
+                    <div className="text-xs text-gray-400">Full report</div>
+                  </div>
+                </div>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }
