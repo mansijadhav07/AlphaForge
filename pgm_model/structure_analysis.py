@@ -302,7 +302,7 @@ class StructureAnalyzer:
             else:
                 node_type = 'isolated'  # Neither (shouldn't happen)
             
-            node_analysis[node] = {
+            node_info = {
                 'name': self.feature_names.get(node, node),
                 'type': node_type,
                 'parents': [self.feature_names.get(p, p) for p in node_parents],
@@ -311,6 +311,11 @@ class StructureAnalyzer:
                 'n_children': len(node_children),
                 'markov_blanket_size': len(node_parents) + len(node_children)
             }
+            
+            # Add role field
+            node_info['role'] = self._determine_node_role(node_info)
+            
+            node_analysis[node] = node_info
         
         # Network statistics
         network_stats = {
@@ -342,7 +347,7 @@ class StructureAnalyzer:
         
         return {
             'timestamp': datetime.now().isoformat(),
-            'node_analysis': node_analysis,
+            'nodes': node_analysis,  # Changed from 'node_analysis' to 'nodes'
             'network_statistics': network_stats,
             'key_nodes': key_nodes,
             'dependency_paths': self._find_dependency_paths()
@@ -454,22 +459,23 @@ class StructureAnalyzer:
         """
         logger.info("Validating network structure")
         
+        # Check for cycles (DAG requirement)
+        has_cycles = self._has_cycles()
+        is_valid_dag = not has_cycles
+        
         validation_results = {
-            'timestamp': datetime.now().isoformat(),
-            'is_valid': True,
-            'issues': [],
-            'warnings': [],
-            'recommendations': []
+            'is_valid_dag': is_valid_dag,
+            'has_cycles': has_cycles,
+            'correlation_support': {},
+            'missing_edges': [],
+            'validation_summary': ''
         }
         
-        # Check for cycles (DAG requirement)
-        if self._has_cycles():
-            validation_results['is_valid'] = False
-            validation_results['issues'].append({
-                'type': 'cycle_detected',
-                'severity': 'critical',
-                'message': 'Network contains cycles. Bayesian Networks must be Directed Acyclic Graphs (DAGs).'
-            })
+        issues = []
+        warnings = []
+        
+        if has_cycles:
+            issues.append('Network contains cycles (not a valid DAG)')
         
         # Check correlation support for edges
         corr_matrix = self.calculate_correlation_matrix(features_df)
@@ -484,13 +490,12 @@ class StructureAnalyzer:
                 idx_child = corr_matrix['features'].index(child_feat)
                 corr_value = corr_matrix['matrix'][idx_parent][idx_child]
                 
+                # Store correlation support
+                edge_key = f"{parent}->{child}"
+                validation_results['correlation_support'][edge_key] = float(corr_value)
+                
                 if abs(corr_value) < 0.1:
-                    validation_results['warnings'].append({
-                        'type': 'weak_correlation',
-                        'edge': f"{self.feature_names.get(parent, parent)} → {self.feature_names.get(child, child)}",
-                        'correlation': float(corr_value),
-                        'message': f"Low correlation ({corr_value:.3f}) between connected nodes. Consider removing edge."
-                    })
+                    warnings.append(f"Weak correlation ({corr_value:.3f}) for {parent} → {child}")
         
         # Check for missing important correlations
         strong_corrs = corr_matrix.get('strong_correlations', [])
@@ -502,14 +507,25 @@ class StructureAnalyzer:
             
             if (feat1_state, feat2_state) not in existing_edges_set and \
                (feat2_state, feat1_state) not in existing_edges_set:
-                validation_results['recommendations'].append({
-                    'type': 'missing_edge',
-                    'features': [corr_info['feature1'], corr_info['feature2']],
-                    'correlation': corr_info['correlation'],
-                    'message': f"Strong correlation ({corr_info['correlation']:.3f}) but no edge. Consider adding connection."
+                validation_results['missing_edges'].append({
+                    'feature1': corr_info['feature1'],
+                    'feature2': corr_info['feature2'],
+                    'correlation': float(corr_info['correlation'])
                 })
         
-        logger.info(f"Structure validation complete. Valid: {validation_results['is_valid']}")
+        # Generate validation summary
+        if is_valid_dag:
+            summary_parts = ["Structure is a valid DAG"]
+            if validation_results['correlation_support']:
+                avg_corr = np.mean(list(validation_results['correlation_support'].values()))
+                summary_parts.append(f"with average edge correlation of {avg_corr:.3f}")
+            if warnings:
+                summary_parts.append(f"but has {len(warnings)} warnings")
+            validation_results['validation_summary'] = " ".join(summary_parts) + "."
+        else:
+            validation_results['validation_summary'] = "Structure is invalid: " + "; ".join(issues)
+        
+        logger.info(f"Structure validation complete. Valid DAG: {is_valid_dag}")
         
         return validation_results
     

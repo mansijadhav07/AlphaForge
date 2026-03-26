@@ -1088,7 +1088,7 @@ def _transform_structure_report(report: Dict) -> StructureAnalysisResponse:
     
     dependency_analysis = DependencyAnalysis(
         nodes=nodes,
-        key_nodes=dep_data['key_nodes'],
+        key_nodes=[node['node'] for node in dep_data['key_nodes']],  # Extract node names
         dependency_paths=dependency_paths
     )
     
