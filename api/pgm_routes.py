@@ -7,6 +7,7 @@ Exposes Probabilistic Graphical Model functionality via REST APIs.
 from fastapi import APIRouter, HTTPException, Depends, Query
 from typing import Dict, List, Optional
 from datetime import datetime
+from pathlib import Path
 import pandas as pd
 
 from api.schemas import (
@@ -1177,109 +1178,47 @@ async def get_baseline_comparison(
     try:
         logger.info(f"Baseline comparison requested for {symbol}")
         
-        from pgm_model.baseline_models import create_baseline_comparison
-        from sklearn.model_selection import train_test_split
+        # Try to load pre-computed comparison results first
+        comparison_file = Path(f'data/baseline_comparison/{symbol}_comparison.json')
+        if comparison_file.exists():
+            logger.info(f"Loading pre-computed comparison for {symbol}")
+            try:
+                import json
+                with open(comparison_file, 'r') as f:
+                    data = json.load(f)
+                
+                # Convert to response format
+                models_response = {}
+                for name, metrics in data['models'].items():
+                    models_response[name] = ModelMetricsResponse(**metrics)
+                
+                # Calculate improvements
+                random_acc = data['models']['Random']['accuracy']
+                majority_acc = data['models']['Majority Class']['accuracy']
+                best_acc = data['best_model']['accuracy']
+                
+                improvement_over_random = best_acc - random_acc
+                improvement_over_majority = best_acc - majority_acc
+                
+                response = BaselineComparisonResponse(
+                    symbol=data['symbol'],
+                    timestamp=data['timestamp'],
+                    models=models_response,
+                    summary=data['summary'],
+                    best_model=data['best_model'],
+                    winner=data['best_model']['name'],
+                    improvement_over_random=improvement_over_random,
+                    improvement_over_majority=improvement_over_majority
+                )
+                
+                logger.info(f"Loaded real comparison data for {symbol}")
+                return response
+            except Exception as e:
+                logger.warning(f"Error loading comparison file: {e}, falling back to mock")
         
-        # Get feature data
-        try:
-            from feature_store.offline_store import OfflineFeatureStore
-            store = OfflineFeatureStore()
-            features_df = store.get_latest_features(symbol, feature_view="market_features")
-            
-            if features_df is None or features_df.empty or len(features_df) < 100:
-                logger.warning(f"Insufficient data for {symbol}, using mock comparison")
-                return _get_mock_baseline_comparison(symbol)
-        except Exception as e:
-            logger.warning(f"Error fetching features: {e}, using mock comparison")
-            return _get_mock_baseline_comparison(symbol)
-        
-        # Prepare data
-        # Assume we have a target column (e.g., 'future_return_state')
-        target_col = 'future_return_state'
-        
-        if target_col not in features_df.columns:
-            logger.warning(f"Target column {target_col} not found, using mock comparison")
-            return _get_mock_baseline_comparison(symbol)
-        
-        # Select features (exclude target and metadata)
-        feature_cols = [col for col in features_df.columns 
-                       if col not in [target_col, 'timestamp', 'symbol'] 
-                       and not col.endswith('_state')]
-        
-        if len(feature_cols) == 0:
-            logger.warning("No features found, using mock comparison")
-            return _get_mock_baseline_comparison(symbol)
-        
-        X = features_df[feature_cols].fillna(0)
-        y = features_df[target_col]
-        
-        # Train/test split
-        X_train, X_test, y_train, y_test = train_test_split(
-            X, y, test_size=0.3, random_state=42, stratify=y
-        )
-        
-        # Get PGM predictions (if available)
-        pgm_predictions = None
-        try:
-            # Try to get PGM predictions for test set
-            # This is simplified - in practice, you'd need to properly encode features
-            pgm_predictions = []
-            for idx in X_test.index:
-                try:
-                    result = pgm_service.predict(symbol)
-                    pgm_predictions.append(result['predicted_state'])
-                except:
-                    pass
-            
-            if len(pgm_predictions) != len(X_test):
-                pgm_predictions = None
-        except Exception as e:
-            logger.warning(f"Could not get PGM predictions: {e}")
-            pgm_predictions = None
-        
-        # Run comparison
-        comparison_results = create_baseline_comparison(
-            X_train, y_train, X_test, y_test,
-            include_pgm=pgm_predictions is not None,
-            pgm_predictions=np.array(pgm_predictions) if pgm_predictions else None
-        )
-        
-        # Transform to response format
-        models_response = {}
-        for name, metrics in comparison_results['results'].items():
-            models_response[name] = ModelMetricsResponse(
-                model_name=metrics.model_name,
-                accuracy=metrics.accuracy,
-                precision=metrics.precision,
-                recall=metrics.recall,
-                f1_score=metrics.f1_score,
-                log_loss=metrics.log_loss,
-                confusion_matrix=metrics.confusion_matrix,
-                training_time=metrics.training_time,
-                prediction_time=metrics.prediction_time
-            )
-        
-        # Calculate improvements
-        random_acc = comparison_results['results']['Random'].accuracy
-        majority_acc = comparison_results['results']['Majority Class'].accuracy
-        best_acc = comparison_results['best_model']['accuracy']
-        
-        improvement_over_random = best_acc - random_acc
-        improvement_over_majority = best_acc - majority_acc
-        
-        response = BaselineComparisonResponse(
-            symbol=symbol,
-            timestamp=datetime.now().isoformat(),
-            models=models_response,
-            summary=comparison_results['summary'],
-            best_model=comparison_results['best_model'],
-            winner=comparison_results['best_model']['name'],
-            improvement_over_random=improvement_over_random,
-            improvement_over_majority=improvement_over_majority
-        )
-        
-        logger.info(f"Baseline comparison completed for {symbol}")
-        return response
+        # If no pre-computed results, fall back to mock data
+        logger.warning(f"No pre-computed comparison found for {symbol}, using mock data")
+        return _get_mock_baseline_comparison(symbol)
         
     except Exception as e:
         logger.error(f"Error in baseline comparison: {str(e)}", exc_info=True)
