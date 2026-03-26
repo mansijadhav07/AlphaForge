@@ -823,8 +823,8 @@ class BaselineComparisonResponse(BaseModel):
     symbol: str
     timestamp: str
     models: Dict[str, ModelMetricsResponse]
-    summary: List[Dict[str, any]]
-    best_model: Dict[str, any]
+    summary: List[Dict[str, Any]]
+    best_model: Dict[str, Any]
     winner: str
     improvement_over_random: float
     improvement_over_majority: float
