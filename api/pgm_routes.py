@@ -1366,91 +1366,32 @@ async def get_calibration_analysis(
     try:
         logger.info(f"Calibration analysis requested for {symbol}")
         
-        from pgm_model.calibration import create_calibration_analysis
-        from feature_store.offline_store import OfflineFeatureStore
-        from pgm_model.state_encoding import StateEncoder
-        import numpy as np
-        
-        # Get feature data
-        try:
-            store = OfflineFeatureStore()
-            features_df = store.read_features(
-                feature_group="market_features",
-                use_latest=True,
-                filters={'ticker': symbol}
-            )
-            
-            if features_df is None or features_df.empty or len(features_df) < 100:
-                logger.warning(f"Insufficient data for {symbol}, using mock calibration")
-                return _get_mock_calibration_analysis(symbol)
-        except Exception as e:
-            logger.warning(f"Error fetching features: {e}, using mock calibration")
-            return _get_mock_calibration_analysis(symbol)
-        
-        # Prepare target variable
-        encoder = StateEncoder()
-        if 'future_return' not in features_df.columns:
-            from pgm_model.state_encoding import create_target_variable
-            features_df = create_target_variable(features_df, horizon=5)
-        
-        # Create binary target (positive return vs not)
-        features_df['target_binary'] = (features_df['future_return'] > 0).astype(int)
-        
-        # Get PGM predictions
-        # For simplicity, we'll use a subset of data
-        sample_size = min(500, len(features_df))
-        sample_df = features_df.tail(sample_size).copy()
-        
-        y_true = []
-        y_prob = []
-        
-        for idx in sample_df.index:
+        # Try to load pre-computed calibration results first
+        calibration_file = Path(f'data/calibration/{symbol}_calibration.json')
+        if calibration_file.exists():
+            logger.info(f"Loading pre-computed calibration for {symbol}")
             try:
-                # Get actual outcome
-                actual = sample_df.loc[idx, 'target_binary']
+                import json
+                with open(calibration_file, 'r') as f:
+                    data = json.load(f)
                 
-                # Get PGM prediction (probability of positive return)
-                # This is simplified - in practice you'd encode features properly
-                result = pgm_service.predict(symbol)
+                response = CalibrationAnalysisResponse(
+                    symbol=data['symbol'],
+                    timestamp=data['timestamp'],
+                    calibration_curve=data['calibration_curve'],
+                    reliability_diagram=data['reliability_diagram'],
+                    interpretation=CalibrationInterpretation(**data['interpretation']),
+                    summary=data['summary']
+                )
                 
-                # Extract probability for positive state
-                if 'probabilities' in result:
-                    probs = result['probabilities']
-                    # Assume positive state is last or has highest prob
-                    prob_positive = max(probs.values()) if isinstance(probs, dict) else 0.5
-                else:
-                    prob_positive = 0.5
-                
-                y_true.append(actual)
-                y_prob.append(prob_positive)
-            except:
-                continue
+                logger.info(f"Loaded real calibration data for {symbol}")
+                return response
+            except Exception as e:
+                logger.warning(f"Error loading calibration file: {e}, falling back to mock")
         
-        if len(y_true) < 50:
-            logger.warning(f"Insufficient predictions for {symbol}, using mock calibration")
-            return _get_mock_calibration_analysis(symbol)
-        
-        # Create calibration analysis
-        y_true = np.array(y_true)
-        y_prob = np.array(y_prob)
-        
-        analysis = create_calibration_analysis(y_true, y_prob, n_bins=10)
-        
-        response = CalibrationAnalysisResponse(
-            symbol=symbol,
-            timestamp=datetime.now().isoformat(),
-            calibration_curve=analysis['calibration_curve'],
-            reliability_diagram=analysis['reliability_diagram'],
-            interpretation=CalibrationInterpretation(**analysis['interpretation']),
-            summary={
-                'total_samples': len(y_true),
-                'positive_rate': float(y_true.mean()),
-                'mean_predicted_prob': float(y_prob.mean())
-            }
-        )
-        
-        logger.info(f"Calibration analysis completed for {symbol}")
-        return response
+        # If no pre-computed results, fall back to mock data
+        logger.warning(f"No pre-computed calibration found for {symbol}, using mock data")
+        return _get_mock_calibration_analysis(symbol)
         
     except Exception as e:
         logger.error(f"Error in calibration analysis: {str(e)}", exc_info=True)
