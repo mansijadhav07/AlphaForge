@@ -610,10 +610,13 @@ async def get_failure_analysis(
     """
     Get failure case analysis for a symbol.
     
+    Loads precomputed failure analysis from JSON files.
+    NO MOCK DATA - Returns 404 if data not available.
+    
     Args:
         symbol: Stock ticker symbol
-        max_failures: Maximum number of failures to analyze
-        lookback_periods: Number of periods to look ahead for actual outcome
+        max_failures: Maximum number of failures to return (filters precomputed data)
+        lookback_periods: Not used (kept for API compatibility)
         pgm_service: Injected PGM service
         
     Returns:
@@ -622,100 +625,33 @@ async def get_failure_analysis(
     try:
         logger.info(f"Getting failure analysis for {symbol}")
         
-        from pgm_model.failure_analysis import FailureAnalyzer
-        from pgm_model.evaluation import ModelEvaluator
-        from feature_store.offline_store import OfflineFeatureStore
+        # Load precomputed failure data
+        failure_file = Path(f"data/failures/{symbol}_failures.json")
         
-        # Initialize analyzers
-        failure_analyzer = FailureAnalyzer(pgm_service.explanation_engine)
-        evaluator = ModelEvaluator()
+        if not failure_file.exists():
+            raise HTTPException(
+                status_code=404,
+                detail=f"Failure analysis data not available for {symbol}. "
+                       f"Please run: python3 scripts/generate_failure_data.py --symbols {symbol}"
+            )
         
-        try:
-            # Get historical features
-            offline_store = OfflineFeatureStore()
-            features_df = offline_store.read_features('market_features', version='v1')
-            
-            # Filter for symbol
-            if 'ticker' in features_df.columns:
-                features_df = features_df[features_df['ticker'] == symbol]
-            
-            if len(features_df) < lookback_periods + 10:
-                raise HTTPException(
-                    status_code=404,
-                    detail=f"Insufficient historical data for {symbol}"
-                )
-            
-            # Generate predictions and actuals
-            predictions_list = []
-            actuals_list = []
-            
-            for i in range(len(features_df) - lookback_periods):
-                features = features_df.iloc[i]
-                encoded = pgm_service.encode_features(features)
-                evidence = pgm_service.build_evidence(encoded)
-                
-                try:
-                    result = pgm_service.inference_engine.query(['future_return_state'], evidence)
-                    probs = result.get('future_return_state', {})
-                    
-                    if probs:
-                        predicted_class = max(probs, key=probs.get)
-                        future_return = features_df.iloc[i + lookback_periods]['return']
-                        
-                        if future_return > 0.01:
-                            actual_class = 'positive'
-                        elif future_return < -0.01:
-                            actual_class = 'negative'
-                        else:
-                            actual_class = 'neutral'
-                        
-                        predictions_list.append({
-                            'index': i,
-                            'predicted_class': predicted_class,
-                            'prob_positive': probs.get('positive', 0.0),
-                            'prob_neutral': probs.get('neutral', 0.0),
-                            'prob_negative': probs.get('negative', 0.0),
-                            **{f"{col}_state": encoded.get(col, 'unknown') 
-                               for col in encoded.index if f"{col}_state" in pgm_service.inference_engine.model.nodes}
-                        })
-                        
-                        actuals_list.append({
-                            'index': i,
-                            'actual_class': actual_class
-                        })
-                except Exception as e:
-                    logger.warning(f"Error evaluating sample {i}: {e}")
-                    continue
-            
-            predictions_df = pd.DataFrame(predictions_list).set_index('index')
-            actuals_df = pd.DataFrame(actuals_list).set_index('index')
-            
-            # Analyze failures
-            failure_cases = failure_analyzer.analyze_failures(
-                predictions_df,
-                actuals_df,
-                features_df=None,
-                max_failures=max_failures
-            )
-            
-            # Get summary and insights
-            summary = failure_analyzer.get_failure_summary(failure_cases)
-            summary['failure_rate'] = len(failure_cases) / len(predictions_df) if len(predictions_df) > 0 else 0.0
-            
-            insights = failure_analyzer.get_actionable_insights(failure_cases)
-            
-            return FailureAnalysisResponse(
-                symbol=symbol,
-                timestamp=datetime.now().isoformat(),
-                failure_cases=failure_cases,
-                summary=summary,
-                insights=insights
-            )
-            
-        except Exception as e:
-            logger.warning(f"Could not analyze failures on historical data: {e}")
-            # Return mock data for development
-            return _get_mock_failure_analysis(symbol)
+        # Load results
+        with open(failure_file, 'r') as f:
+            results = json.load(f)
+        
+        # Filter failure cases if max_failures is less than stored
+        failure_cases = results.get('failure_cases', [])
+        if len(failure_cases) > max_failures:
+            failure_cases = failure_cases[:max_failures]
+        
+        # Return response
+        return FailureAnalysisResponse(
+            symbol=results.get('symbol', symbol),
+            timestamp=results.get('timestamp', datetime.now().isoformat()),
+            failure_cases=failure_cases,
+            summary=results.get('summary', {}),
+            insights=results.get('insights', [])
+        )
         
     except HTTPException:
         raise
@@ -724,89 +660,6 @@ async def get_failure_analysis(
         raise HTTPException(status_code=500, detail=f"Failed to get failure analysis: {str(e)}")
 
 
-def _get_mock_failure_analysis(symbol: str) -> FailureAnalysisResponse:
-    """Generate mock failure analysis data for development."""
-    return FailureAnalysisResponse(
-        symbol=symbol,
-        timestamp=datetime.now().isoformat(),
-        failure_cases=[
-            {
-                "index": 15,
-                "date": "2024-03-15",
-                "predicted": "positive",
-                "actual": "negative",
-                "predicted_probability": 0.75,
-                "actual_probability": 0.10,
-                "confidence": "high",
-                "severity": "high",
-                "reason": "Model was highly confident (75.0%) in predicting 'positive'. Large probability gap (65.0%) between predicted and actual class. Possible causes: RSI and momentum gave conflicting signals.",
-                "probabilities": {"positive": 0.75, "neutral": 0.15, "negative": 0.10},
-                "feature_states": {"RSI": "oversold", "Momentum Score": "weak", "Market Regime": "bull"},
-                "failure_type": "false_positive_extreme",
-                "is_common_pattern": True,
-                "pattern_frequency": 8
-            },
-            {
-                "index": 23,
-                "date": "2024-03-18",
-                "predicted": "neutral",
-                "actual": "positive",
-                "predicted_probability": 0.55,
-                "actual_probability": 0.30,
-                "confidence": "moderate",
-                "severity": "medium",
-                "reason": "Model had moderate confidence (55.0%) in predicting 'neutral'. Moderate probability gap (25.0%) between classes.",
-                "probabilities": {"positive": 0.30, "neutral": 0.55, "negative": 0.15},
-                "feature_states": {"RSI": "neutral", "Momentum Score": "moderate", "Volatility": "high"},
-                "failure_type": "false_negative",
-                "is_common_pattern": False,
-                "pattern_frequency": 5
-            },
-            {
-                "index": 42,
-                "date": "2024-03-22",
-                "predicted": "negative",
-                "actual": "positive",
-                "predicted_probability": 0.68,
-                "actual_probability": 0.15,
-                "confidence": "moderate",
-                "severity": "medium",
-                "reason": "Model had moderate confidence (68.0%) in predicting 'negative'. Large probability gap (53.0%) between predicted and actual class. Possible causes: High volatility in bear regime increased uncertainty.",
-                "probabilities": {"positive": 0.15, "neutral": 0.17, "negative": 0.68},
-                "feature_states": {"RSI": "overbought", "Momentum Score": "weak", "Market Regime": "bear", "Volatility": "high"},
-                "failure_type": "false_negative_extreme",
-                "is_common_pattern": True,
-                "pattern_frequency": 8
-            }
-        ],
-        summary={
-            "total_failures": 35,
-            "by_type": {
-                "false_positive_extreme": 8,
-                "false_negative_extreme": 8,
-                "false_positive": 7,
-                "false_negative": 12
-            },
-            "by_severity": {
-                "high": 10,
-                "medium": 15,
-                "low": 10
-            },
-            "by_confidence": {
-                "high": 10,
-                "moderate": 18,
-                "low": 7
-            },
-            "most_common_type": "false_negative",
-            "high_severity_count": 10,
-            "failure_rate": 0.35
-        },
-        insights=[
-            "⚠️ 10 high-severity failures detected. Model is making confident wrong predictions - review feature engineering.",
-            "📊 12 failures are 'false_negative' type. Consider adding features to better distinguish these cases.",
-            "🎯 10 failures occurred with high confidence. Model may be overconfident - consider calibration adjustments."
-        ]
-    )
 
 
 def _get_mock_evaluation(symbol: str) -> ModelEvaluationResponse:
