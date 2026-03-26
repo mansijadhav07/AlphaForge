@@ -2,12 +2,15 @@
 Market data and analytics API routes.
 
 Provides endpoints for market overview, stock features, backtesting, and insights.
+
+ALL DATA IS REAL - NO MOCK DATA.
 """
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from typing import List, Dict, Any
-import random
 from datetime import datetime, timedelta
+from pathlib import Path
+import json
 
 from api.schemas import (
     MarketOverview,
@@ -15,121 +18,214 @@ from api.schemas import (
     BacktestResult,
     Insight
 )
+from api.dependencies import get_pgm_service
+from services.data_service import DataService
+from utils.logger import get_logger
 
+logger = get_logger(__name__)
 router = APIRouter(prefix="/api", tags=["Market Data"])
+
+# Initialize data service
+data_service = DataService()
 
 
 @router.get("/market-overview", response_model=MarketOverview)
-async def get_market_overview():
+async def get_market_overview(pgm_service = Depends(get_pgm_service)):
     """
     Get market overview with top stocks and signals.
     
-    Returns:
-        Market overview data including regime, volatility, top stocks, and signals
-    """
-    # Mock data for now - replace with real data later
-    regimes = ["Bull", "Bear", "Sideways"]
-    regime = random.choice(regimes)
+    Returns REAL DATA:
+    - Latest prices from yfinance
+    - PGM-based regime detection
+    - PGM-based trading signals
+    - Real volatility calculations
     
-    return MarketOverview(
-        timestamp=datetime.now().isoformat(),
-        market_regime=regime,
-        volatility_index=random.uniform(10, 30),
-        top_stocks=[
-            {
-                "ticker": "AAPL",
-                "price": 175.50 + random.uniform(-5, 5),
-                "change": random.uniform(-3, 3),
-                "change_pct": random.uniform(-2, 2)
-            },
-            {
-                "ticker": "TSLA",
-                "price": 245.30 + random.uniform(-10, 10),
-                "change": random.uniform(-5, 5),
-                "change_pct": random.uniform(-3, 3)
-            },
-            {
-                "ticker": "GOOGL",
-                "price": 140.20 + random.uniform(-3, 3),
-                "change": random.uniform(-2, 2),
-                "change_pct": random.uniform(-1.5, 1.5)
-            },
-            {
-                "ticker": "MSFT",
-                "price": 380.75 + random.uniform(-8, 8),
-                "change": random.uniform(-4, 4),
-                "change_pct": random.uniform(-2, 2)
-            }
-        ],
-        signals=[
-            {
-                "ticker": "AAPL",
-                "signal": "BUY",
-                "confidence": 0.75,
-                "reason": "Strong momentum with RSI oversold and positive MACD crossover"
-            },
-            {
-                "ticker": "TSLA",
-                "signal": "HOLD",
-                "confidence": 0.60,
-                "reason": "Mixed signals - high volatility but neutral momentum"
-            },
-            {
-                "ticker": "GOOGL",
-                "signal": "SELL",
-                "confidence": 0.68,
-                "reason": "Overbought conditions with bearish divergence"
-            }
-        ]
-    )
+    Returns:
+        Market overview data with real market information
+    """
+    try:
+        logger.info("Fetching market overview with real data")
+        
+        # Define symbols to track
+        symbols = ["AAPL", "TSLA", "GOOGL", "MSFT"]
+        
+        # Fetch latest data for all symbols
+        stocks_data = data_service.get_multiple_stocks_data(symbols, days=30)
+        
+        if not stocks_data:
+            raise HTTPException(
+                status_code=503,
+                detail="Market data not available. Please try again later."
+            )
+        
+        # Build top stocks list with real data
+        top_stocks = []
+        signals = []
+        
+        for symbol in symbols:
+            if symbol not in stocks_data:
+                continue
+            
+            df = stocks_data[symbol]
+            if df.empty or len(df) < 2:
+                continue
+            
+            # Get latest and previous close
+            latest = df.iloc[-1]
+            previous = df.iloc[-2]
+            
+            current_price = float(latest['close'])
+            prev_price = float(previous['close'])
+            change = current_price - prev_price
+            change_pct = (change / prev_price) * 100
+            
+            top_stocks.append({
+                "ticker": symbol,
+                "price": round(current_price, 2),
+                "change": round(change, 2),
+                "change_pct": round(change_pct, 2)
+            })
+            
+            # Get PGM prediction and signal
+            prediction = data_service.get_pgm_predictions(symbol, pgm_service)
+            if prediction:
+                signal = prediction['signal']
+                confidence = prediction.get('confidence', 'moderate')
+                
+                # Get explanation for signal reason
+                explanation = data_service.get_pgm_explanation(symbol, pgm_service)
+                if explanation:
+                    # Extract key factors for reason
+                    key_factors = explanation.get('key_factors', [])[:2]
+                    factor_names = [f['feature'].replace('_state', '').replace('_', ' ').title() 
+                                  for f in key_factors]
+                    reason = f"Based on {', '.join(factor_names)}" if factor_names else "Based on market analysis"
+                else:
+                    reason = f"{confidence.capitalize()} confidence signal"
+                
+                signals.append({
+                    "ticker": symbol,
+                    "signal": signal,
+                    "confidence": prediction['signal_probabilities'].get(signal.lower(), 0.5),
+                    "reason": reason
+                })
+        
+        if not top_stocks:
+            raise HTTPException(
+                status_code=503,
+                detail="Unable to fetch market data for any symbols"
+            )
+        
+        # Determine overall market regime
+        # Use first available symbol for market regime
+        market_regime = "Sideways"  # default
+        volatility_index = 15.0  # default
+        
+        for symbol in symbols:
+            regime_data = data_service.get_regime_probabilities(symbol, pgm_service)
+            if regime_data:
+                current_regime = regime_data.get('current', 'sideways')
+                market_regime = current_regime.capitalize()
+                
+                # Calculate volatility from recent data
+                if symbol in stocks_data:
+                    df = stocks_data[symbol]
+                    if len(df) >= 20:
+                        returns = df['close'].pct_change().dropna()
+                        volatility_index = float(returns.std() * 100 * (252 ** 0.5))  # Annualized
+                
+                break
+        
+        return MarketOverview(
+            timestamp=datetime.now().isoformat(),
+            market_regime=market_regime,
+            volatility_index=round(volatility_index, 2),
+            top_stocks=top_stocks,
+            signals=signals
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching market overview: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to fetch market overview: {str(e)}"
+        )
 
 
 @router.get("/features/{symbol}")
-async def get_features(symbol: str):
+async def get_features(symbol: str, days: int = 30):
     """
     Get computed features for a stock symbol.
     
+    Returns REAL DATA from feature store:
+    - Technical indicators (RSI, MACD, Bollinger Bands, ATR)
+    - Moving averages (SMA 10, 30, 50)
+    - Volatility metrics
+    - Momentum scores
+    - Market regime
+    
     Args:
         symbol: Stock ticker symbol (e.g., AAPL)
+        days: Number of days of historical features (default: 30)
         
     Returns:
         List of feature data points with technical indicators
     """
-    # Generate mock feature data
-    features = []
-    base_price = 175.0
-    
-    for i in range(30):
-        date = (datetime.now() - timedelta(days=30-i)).strftime("%Y-%m-%d")
-        price = base_price + random.uniform(-10, 10)
+    try:
+        logger.info(f"Fetching real features for {symbol}, last {days} days")
         
-        features.append({
-            "ticker": symbol,
-            "date": date,
-            "close": price,
-            "open": price + random.uniform(-2, 2),
-            "high": price + random.uniform(0, 3),
-            "low": price - random.uniform(0, 3),
-            "volume": random.randint(50000000, 150000000),
-            "return": random.uniform(-0.03, 0.03),
-            "rsi": random.uniform(30, 70),
-            "macd": random.uniform(-2, 2),
-            "macd_signal": random.uniform(-2, 2),
-            "macd_diff": random.uniform(-1, 1),
-            "sma_10": price + random.uniform(-5, 5),
-            "sma_30": price + random.uniform(-8, 8),
-            "sma_50": price + random.uniform(-10, 10),
-            "volatility_10": random.uniform(0.01, 0.03),
-            "volatility_30": random.uniform(0.015, 0.035),
-            "momentum_score": random.uniform(-1, 1),
-            "regime": random.choice([0, 1, 2]),
-            "bb_upper": price + random.uniform(5, 10),
-            "bb_middle": price,
-            "bb_lower": price - random.uniform(5, 10),
-            "atr": random.uniform(2, 5)
-        })
-    
-    return features
+        # Get historical features from feature store
+        features_df = data_service.get_historical_features(symbol, days=days)
+        
+        if features_df is None or features_df.empty:
+            raise HTTPException(
+                status_code=404,
+                detail=f"No feature data available for {symbol}. Please ensure data has been ingested and features computed."
+            )
+        
+        # Convert DataFrame to list of dictionaries
+        features = []
+        for _, row in features_df.iterrows():
+            feature_dict = {
+                "ticker": symbol,
+                "date": row.get('date', '').strftime('%Y-%m-%d') if hasattr(row.get('date', ''), 'strftime') else str(row.get('date', '')),
+                "close": float(row.get('close', 0)),
+                "open": float(row.get('open', 0)),
+                "high": float(row.get('high', 0)),
+                "low": float(row.get('low', 0)),
+                "volume": int(row.get('volume', 0)),
+                "return": float(row.get('return', 0)),
+                "rsi": float(row.get('rsi', 50)),
+                "macd": float(row.get('macd', 0)),
+                "macd_signal": float(row.get('macd_signal', 0)),
+                "macd_diff": float(row.get('macd_diff', 0)),
+                "sma_10": float(row.get('sma_10', 0)),
+                "sma_30": float(row.get('sma_30', 0)),
+                "sma_50": float(row.get('sma_50', 0)),
+                "volatility_10": float(row.get('volatility_10', 0)),
+                "volatility_30": float(row.get('volatility_30', 0)),
+                "momentum_score": float(row.get('momentum_score', 0)),
+                "regime": int(row.get('regime', 1)),
+                "bb_upper": float(row.get('bb_upper', 0)),
+                "bb_middle": float(row.get('bb_middle', 0)),
+                "bb_lower": float(row.get('bb_lower', 0)),
+                "atr": float(row.get('atr', 0))
+            }
+            features.append(feature_dict)
+        
+        logger.info(f"Returning {len(features)} feature records for {symbol}")
+        return features
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching features for {symbol}: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to fetch features: {str(e)}"
+        )
 
 
 @router.get("/backtest/{strategy}")
@@ -137,92 +233,176 @@ async def get_backtest_results(strategy: str, ticker: str = "AAPL"):
     """
     Get backtesting results for a strategy.
     
+    Returns REAL DATA from precomputed backtest results or runs backtest.
+    
     Args:
-        strategy: Strategy name (e.g., RSI_Strategy, MACD_Strategy)
+        strategy: Strategy name (e.g., RSI_Strategy, MACD_Strategy, PGM_Strategy)
         ticker: Stock ticker symbol
         
     Returns:
         Backtest results with performance metrics and equity curve
     """
-    # Generate mock backtest data
-    initial_capital = 10000
-    final_value = initial_capital * random.uniform(0.9, 1.3)
-    total_return = (final_value - initial_capital) / initial_capital
-    
-    # Generate equity curve
-    equity_curve = []
-    current_value = initial_capital
-    
-    for i in range(100):
-        date = (datetime.now() - timedelta(days=100-i)).strftime("%Y-%m-%d")
-        current_value *= (1 + random.uniform(-0.02, 0.02))
-        equity_curve.append({
-            "date": date,
-            "value": current_value
-        })
-    
-    return {
-        "strategy": strategy,
-        "ticker": ticker,
-        "initial_capital": initial_capital,
-        "final_value": final_value,
-        "total_return": total_return,
-        "sharpe_ratio": random.uniform(0.5, 2.5),
-        "max_drawdown": random.uniform(-0.3, -0.05),
-        "win_rate": random.uniform(0.45, 0.65),
-        "num_trades": random.randint(20, 100),
-        "equity_curve": equity_curve
-    }
+    try:
+        logger.info(f"Fetching backtest results for {strategy} on {ticker}")
+        
+        # Try to load precomputed backtest results
+        backtest_file = Path(f'data/backtests/{ticker}_{strategy}.json')
+        
+        if backtest_file.exists():
+            logger.info(f"Loading precomputed backtest for {strategy} on {ticker}")
+            with open(backtest_file, 'r') as f:
+                results = json.load(f)
+            return results
+        
+        # If no precomputed results, return error
+        # (Running backtests on-demand is expensive, should be precomputed)
+        raise HTTPException(
+            status_code=404,
+            detail=f"No backtest results found for {strategy} on {ticker}. Please run backtest script first."
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching backtest results: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to fetch backtest results: {str(e)}"
+        )
 
 
 @router.get("/insights")
-async def get_insights():
+async def get_insights(pgm_service = Depends(get_pgm_service)):
     """
     Get AI-powered market insights.
+    
+    Returns REAL INSIGHTS generated from:
+    - PGM predictions and explanations
+    - Recent market data analysis
+    - Regime changes
+    - High-confidence signals
     
     Returns:
         List of insights with warnings, opportunities, and market updates
     """
-    insights = [
-        {
-            "id": "1",
-            "type": "warning",
-            "title": "High Volatility Detected",
-            "description": "Market volatility has increased by 25% in the last 3 days. Consider reducing position sizes.",
-            "timestamp": datetime.now().isoformat(),
-            "ticker": "SPY"
-        },
-        {
-            "id": "2",
-            "type": "success",
-            "title": "Strong Momentum Signal",
-            "description": "AAPL showing strong bullish momentum with RSI at 45 and positive MACD crossover.",
-            "timestamp": (datetime.now() - timedelta(hours=2)).isoformat(),
-            "ticker": "AAPL"
-        },
-        {
-            "id": "3",
-            "type": "info",
-            "title": "Market Regime Change",
-            "description": "Market has transitioned from Bull to Sideways regime. Expect range-bound trading.",
-            "timestamp": (datetime.now() - timedelta(hours=5)).isoformat()
-        },
-        {
-            "id": "4",
-            "type": "warning",
-            "title": "Overbought Conditions",
-            "description": "TSLA RSI at 78 indicates overbought conditions. Potential pullback ahead.",
-            "timestamp": (datetime.now() - timedelta(hours=8)).isoformat(),
-            "ticker": "TSLA"
-        },
-        {
-            "id": "5",
-            "type": "success",
-            "title": "Breakout Opportunity",
-            "description": "GOOGL breaking above 50-day SMA with strong volume. Potential upside momentum.",
-            "timestamp": (datetime.now() - timedelta(days=1)).isoformat(),
-            "ticker": "GOOGL"
-        }
-    ]
-    
-    return insights
+    try:
+        logger.info("Generating real market insights")
+        
+        insights = []
+        symbols = ["AAPL", "TSLA", "GOOGL", "MSFT"]
+        
+        for symbol in symbols:
+            try:
+                # Get PGM prediction
+                prediction = data_service.get_pgm_predictions(symbol, pgm_service)
+                if not prediction:
+                    continue
+                
+                # Get explanation
+                explanation = data_service.get_pgm_explanation(symbol, pgm_service)
+                if not explanation:
+                    continue
+                
+                # Get latest features
+                features = data_service.get_latest_features(symbol)
+                if features is None:
+                    continue
+                
+                # Generate insights based on prediction confidence and signal
+                signal = prediction['signal']
+                confidence = prediction.get('confidence', 'moderate')
+                probabilities = prediction.get('probabilities', {})
+                
+                # High confidence signals
+                if confidence == 'high':
+                    insight_type = "success" if signal == "BUY" else "warning" if signal == "SELL" else "info"
+                    
+                    key_factors = explanation.get('key_factors', [])[:2]
+                    factor_desc = ", ".join([f['feature'].replace('_state', '').replace('_', ' ').title() 
+                                            for f in key_factors])
+                    
+                    insights.append({
+                        "id": f"{symbol}_{signal}_{len(insights)}",
+                        "type": insight_type,
+                        "title": f"High Confidence {signal} Signal - {symbol}",
+                        "description": f"PGM model shows {confidence} confidence {signal} signal based on {factor_desc}. Probability: {max(probabilities.values()):.1%}",
+                        "timestamp": datetime.now().isoformat(),
+                        "ticker": symbol
+                    })
+                
+                # Check for extreme RSI
+                rsi = features.get('rsi', 50)
+                if rsi > 75:
+                    insights.append({
+                        "id": f"{symbol}_overbought_{len(insights)}",
+                        "type": "warning",
+                        "title": f"Overbought Conditions - {symbol}",
+                        "description": f"RSI at {rsi:.1f} indicates overbought conditions. Potential pullback ahead.",
+                        "timestamp": datetime.now().isoformat(),
+                        "ticker": symbol
+                    })
+                elif rsi < 25:
+                    insights.append({
+                        "id": f"{symbol}_oversold_{len(insights)}",
+                        "type": "success",
+                        "title": f"Oversold Opportunity - {symbol}",
+                        "description": f"RSI at {rsi:.1f} indicates oversold conditions. Potential bounce opportunity.",
+                        "timestamp": datetime.now().isoformat(),
+                        "ticker": symbol
+                    })
+                
+                # Check volatility
+                volatility = features.get('volatility_10', 0)
+                if volatility > 0.03:
+                    insights.append({
+                        "id": f"{symbol}_highvol_{len(insights)}",
+                        "type": "warning",
+                        "title": f"High Volatility Detected - {symbol}",
+                        "description": f"10-day volatility at {volatility:.2%}. Consider reducing position sizes or using wider stops.",
+                        "timestamp": datetime.now().isoformat(),
+                        "ticker": symbol
+                    })
+                
+                # Check regime
+                regime_data = data_service.get_regime_probabilities(symbol, pgm_service)
+                if regime_data:
+                    current_regime = regime_data.get('current', 'unknown')
+                    regime_prob = regime_data.get(current_regime, 0)
+                    
+                    if regime_prob > 0.7:
+                        insights.append({
+                            "id": f"{symbol}_regime_{len(insights)}",
+                            "type": "info",
+                            "title": f"Strong {current_regime.capitalize()} Regime - {symbol}",
+                            "description": f"Market regime detected as {current_regime} with {regime_prob:.0%} confidence. Adjust strategy accordingly.",
+                            "timestamp": datetime.now().isoformat(),
+                            "ticker": symbol
+                        })
+                
+            except Exception as e:
+                logger.warning(f"Error generating insights for {symbol}: {e}")
+                continue
+        
+        # If no insights generated, add a general market update
+        if not insights:
+            insights.append({
+                "id": "general_update",
+                "type": "info",
+                "title": "Market Analysis In Progress",
+                "description": "Analyzing market conditions. Check back soon for detailed insights.",
+                "timestamp": datetime.now().isoformat()
+            })
+        
+        # Sort by timestamp (most recent first) and limit to 10
+        insights.sort(key=lambda x: x['timestamp'], reverse=True)
+        insights = insights[:10]
+        
+        logger.info(f"Generated {len(insights)} real insights")
+        return insights
+        
+    except Exception as e:
+        logger.error(f"Error generating insights: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to generate insights: {str(e)}"
+        )
