@@ -109,8 +109,19 @@ class StateEncoder:
         """Load encoding configuration from JSON file."""
         try:
             with open(config_path, 'r') as f:
-                custom_rules = json.load(f)
-            self.encoding_rules.update(custom_rules)
+                config = json.load(f)
+            
+            # Load encoding rules
+            if 'encoding_rules' in config:
+                self.encoding_rules.update(config['encoding_rules'])
+            else:
+                # Backward compatibility: if no 'encoding_rules' key, treat whole config as rules
+                self.encoding_rules.update(config)
+            
+            # Load learned thresholds
+            if 'learned_thresholds' in config:
+                self.learned_thresholds.update(config['learned_thresholds'])
+            
             logger.info(f"Loaded encoding config from {config_path}")
         except Exception as e:
             logger.error(f"Failed to load config: {e}")

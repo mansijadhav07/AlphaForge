@@ -70,10 +70,10 @@ class DataService:
             end_date = datetime.now()
             start_date = end_date - timedelta(days=days)
             
-            df = self.data_ingestion.fetch_data(
-                symbol=symbol,
-                start_date=start_date.strftime('%Y-%m-%d'),
-                end_date=end_date.strftime('%Y-%m-%d')
+            # Use fetch_latest for recent data
+            df = self.data_ingestion.fetch_latest(
+                ticker=symbol,
+                lookback_days=days
             )
             
             if df is None or df.empty:
@@ -131,8 +131,9 @@ class DataService:
             
             # Read from feature store
             features_df = self.feature_store.read_features(
-                feature_view='market_features',
-                version='v1'
+                feature_group='market_features',
+                version='v1',
+                use_latest=True
             )
             
             if features_df is None or features_df.empty:
@@ -185,8 +186,9 @@ class DataService:
             
             # Read from feature store
             features_df = self.feature_store.read_features(
-                feature_view='market_features',
-                version='v1'
+                feature_group='market_features',
+                version='v1',
+                use_latest=True
             )
             
             if features_df is None or features_df.empty:
@@ -240,6 +242,10 @@ class DataService:
             if features is None:
                 logger.warning(f"No features available for {symbol}")
                 return None
+            
+            # Convert Series to DataFrame (encode_features expects DataFrame)
+            if isinstance(features, pd.Series):
+                features = features.to_frame().T
             
             # Encode features
             encoded = pgm_service.encode_features(features)
@@ -297,6 +303,10 @@ class DataService:
             if features is None:
                 return None
             
+            # Convert Series to DataFrame if needed
+            if isinstance(features, pd.Series):
+                features = features.to_frame().T
+            
             encoded = pgm_service.encode_features(features)
             evidence = pgm_service.build_evidence(encoded)
             
@@ -341,6 +351,10 @@ class DataService:
             features = self.get_latest_features(symbol)
             if features is None:
                 return None
+            
+            # Convert Series to DataFrame (encode_features expects DataFrame)
+            if isinstance(features, pd.Series):
+                features = features.to_frame().T
             
             encoded = pgm_service.encode_features(features)
             evidence = pgm_service.build_evidence(encoded)

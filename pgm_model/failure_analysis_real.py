@@ -423,7 +423,9 @@ class RealFailureAnalyzer:
                 'by_type': {},
                 'by_confidence': {'high': 0, 'medium': 0, 'low': 0},
                 'avg_predicted_probability': 0.0,
-                'avg_actual_probability': 0.0
+                'avg_actual_probability': 0.0,
+                'most_common_type': None,
+                'high_severity_count': 0
             }
         
         # Count by severity
@@ -439,6 +441,12 @@ class RealFailureAnalyzer:
         avg_predicted_prob = np.mean([case['predicted_probability'] for case in failure_cases])
         avg_actual_prob = np.mean([case['actual_probability'] for case in failure_cases])
         
+        # Most common type
+        most_common_type = type_counts.most_common(1)[0][0] if type_counts else None
+        
+        # High severity count
+        high_severity_count = severity_counts.get('high', 0)
+        
         return {
             'total_failures': len(failure_cases),
             'by_severity': {
@@ -453,7 +461,9 @@ class RealFailureAnalyzer:
                 'low': confidence_counts.get('low', 0)
             },
             'avg_predicted_probability': round(float(avg_predicted_prob), 4),
-            'avg_actual_probability': round(float(avg_actual_prob), 4)
+            'avg_actual_probability': round(float(avg_actual_prob), 4),
+            'most_common_type': most_common_type,
+            'high_severity_count': high_severity_count
         }
     
     def get_actionable_insights(self, failure_cases: List[Dict]) -> List[str]:
