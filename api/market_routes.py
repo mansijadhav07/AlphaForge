@@ -20,13 +20,15 @@ from api.schemas import (
 )
 from api.dependencies import get_pgm_service
 from services.data_service import DataService
+from services.cache_service import get_cache_service
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
 router = APIRouter(prefix="/api", tags=["Market Data"])
 
-# Initialize data service
+# Initialize services
 data_service = DataService()
+cache_service = get_cache_service()
 
 
 @router.get("/market-overview", response_model=MarketOverview)
@@ -471,4 +473,316 @@ async def get_insights(pgm_service = Depends(get_pgm_service)):
         raise HTTPException(
             status_code=500,
             detail=f"Failed to generate insights: {str(e)}"
+        )
+
+
+
+# ============================================================================
+# PERFORMANCE-OPTIMIZED ENDPOINTS
+# ============================================================================
+
+@router.get("/historical/{symbol}")
+async def get_historical_data(
+    symbol: str,
+    days: int = 30,
+    pgm_service = Depends(get_pgm_service)
+):
+    """
+    Get cached historical data with precomputed indicators.
+    
+    OPTIMIZED FOR PERFORMANCE:
+    - Returns cached data (1-hour TTL)
+    - Includes precomputed SMA, RSI, MACD, etc.
+    - No repeated yfinance calls
+    - Instant response (<100ms)
+    
+    This endpoint should be called ONCE on page load.
+    Use /api/live/{symbol} for updates.
+    
+    Args:
+        symbol: Stock ticker symbol
+        days: Number of days of history (default: 30)
+        pgm_service: PGM service dependency
+        
+    Returns:
+        {
+            "symbol": "AAPL",
+            "data": [...],  # Full historical dataset
+            "cached_at": "2026-04-01T19:30:00",
+            "expires_at": "2026-04-01T20:30:00",
+            "data_points": 30
+        }
+    """
+    try:
+        logger.info(f"Fetching historical data for {symbol} (cached)")
+        
+        # Try cache first
+        cached_data = cache_service.get_historical_data(symbol)
+        
+        if cached_data is not None and not cached_data.empty:
+            logger.info(f"Returning cached historical data for {symbol}")
+            
+            # Convert to list of dicts
+            data_list = []
+            for _, row in cached_data.iterrows():
+                data_list.append({
+                    "ticker": symbol,
+                    "date": row.get('date', '').strftime('%Y-%m-%d') if hasattr(row.get('date', ''), 'strftime') else str(row.get('date', '')),
+                    "close": float(row.get('close', 0)),
+                    "open": float(row.get('open', 0)),
+                    "high": float(row.get('high', 0)),
+                    "low": float(row.get('low', 0)),
+                    "volume": int(row.get('volume', 0)),
+                    "return": float(row.get('return', 0)),
+                    "rsi": float(row.get('rsi', 50)),
+                    "macd": float(row.get('macd', 0)),
+                    "macd_signal": float(row.get('macd_signal', 0)),
+                    "macd_diff": float(row.get('macd_diff', 0)),
+                    "sma_10": float(row.get('sma_10', 0)),
+                    "sma_30": float(row.get('sma_30', 0)),
+                    "sma_50": float(row.get('sma_50', 0)),
+                    "volatility_10": float(row.get('volatility_10', 0)),
+                    "volatility_30": float(row.get('volatility_30', 0)),
+                    "momentum_score": float(row.get('momentum_score', 0)),
+                    "regime": int(row.get('regime', 1)),
+                    "bb_upper": float(row.get('bb_upper', 0)),
+                    "bb_middle": float(row.get('bb_middle', 0)),
+                    "bb_lower": float(row.get('bb_lower', 0)),
+                    "atr": float(row.get('atr', 0))
+                })
+            
+            return {
+                "symbol": symbol,
+                "data": data_list,
+                "cached_at": datetime.now().isoformat(),
+                "data_points": len(data_list),
+                "cache_hit": True
+            }
+        
+        # Cache miss - fetch and compute
+        logger.info(f"Cache miss - fetching fresh data for {symbol}")
+        
+        # Get features from feature store
+        features_df = data_service.get_historical_features(symbol, days=days)
+        
+        if features_df is None or features_df.empty:
+            raise HTTPException(
+                status_code=404,
+                detail=f"No data available for {symbol}. Please ensure data has been ingested."
+            )
+        
+        # Cache the data
+        cache_service.set_historical_data(symbol, features_df, ttl=3600)  # 1 hour
+        
+        # Convert to response format
+        data_list = []
+        for _, row in features_df.iterrows():
+            data_list.append({
+                "ticker": symbol,
+                "date": row.get('date', '').strftime('%Y-%m-%d') if hasattr(row.get('date', ''), 'strftime') else str(row.get('date', '')),
+                "close": float(row.get('close', 0)),
+                "open": float(row.get('open', 0)),
+                "high": float(row.get('high', 0)),
+                "low": float(row.get('low', 0)),
+                "volume": int(row.get('volume', 0)),
+                "return": float(row.get('return', 0)),
+                "rsi": float(row.get('rsi', 50)),
+                "macd": float(row.get('macd', 0)),
+                "macd_signal": float(row.get('macd_signal', 0)),
+                "macd_diff": float(row.get('macd_diff', 0)),
+                "sma_10": float(row.get('sma_10', 0)),
+                "sma_30": float(row.get('sma_30', 0)),
+                "sma_50": float(row.get('sma_50', 0)),
+                "volatility_10": float(row.get('volatility_10', 0)),
+                "volatility_30": float(row.get('volatility_30', 0)),
+                "momentum_score": float(row.get('momentum_score', 0)),
+                "regime": int(row.get('regime', 1)),
+                "bb_upper": float(row.get('bb_upper', 0)),
+                "bb_middle": float(row.get('bb_middle', 0)),
+                "bb_lower": float(row.get('bb_lower', 0)),
+                "atr": float(row.get('atr', 0))
+            })
+        
+        return {
+            "symbol": symbol,
+            "data": data_list,
+            "cached_at": datetime.now().isoformat(),
+            "data_points": len(data_list),
+            "cache_hit": False
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching historical data for {symbol}: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to fetch historical data: {str(e)}"
+        )
+
+
+@router.get("/live/{symbol}")
+async def get_live_price(
+    symbol: str,
+    pgm_service = Depends(get_pgm_service)
+):
+    """
+    Get ONLY the latest price and indicators.
+    
+    OPTIMIZED FOR LIVE UPDATES:
+    - Returns only latest datapoint (~1KB vs 500KB)
+    - Cached for 30 seconds
+    - Fast response (<50ms from cache)
+    - Includes updated indicators for last point only
+    
+    This endpoint should be polled every 20-30 seconds.
+    
+    Args:
+        symbol: Stock ticker symbol
+        pgm_service: PGM service dependency
+        
+    Returns:
+        {
+            "symbol": "AAPL",
+            "price": 182.45,
+            "timestamp": "2026-04-01T19:30:00",
+            "change": 2.34,
+            "change_pct": 0.0130,
+            "indicators": {
+                "rsi": 65.2,
+                "macd": 1.23,
+                "sma_10": 181.5,
+                "sma_30": 179.8,
+                ...
+            }
+        }
+    """
+    try:
+        logger.info(f"Fetching live price for {symbol}")
+        
+        # Try cache first (30-second TTL)
+        cached_price = cache_service.get_live_price(symbol)
+        
+        if cached_price:
+            logger.debug(f"Returning cached live price for {symbol}")
+            return cached_price
+        
+        # Cache miss - fetch latest
+        logger.info(f"Cache miss - fetching fresh live price for {symbol}")
+        
+        # Get latest features
+        latest = data_service.get_latest_features(symbol)
+        
+        if latest is None:
+            raise HTTPException(
+                status_code=404,
+                detail=f"No live data available for {symbol}"
+            )
+        
+        # Get previous close for change calculation
+        historical = data_service.get_historical_features(symbol, days=2)
+        prev_close = historical.iloc[-2]['close'] if historical is not None and len(historical) >= 2 else latest['close']
+        
+        current_price = float(latest['close'])
+        change = current_price - float(prev_close)
+        change_pct = (change / float(prev_close)) if prev_close != 0 else 0
+        
+        # Build response
+        response = {
+            "symbol": symbol,
+            "price": round(current_price, 2),
+            "timestamp": latest.get('date', datetime.now()).isoformat() if hasattr(latest.get('date'), 'isoformat') else datetime.now().isoformat(),
+            "change": round(change, 2),
+            "change_pct": round(change_pct, 4),
+            "indicators": {
+                "open": float(latest.get('open', 0)),
+                "high": float(latest.get('high', 0)),
+                "low": float(latest.get('low', 0)),
+                "volume": int(latest.get('volume', 0)),
+                "rsi": round(float(latest.get('rsi', 50)), 2),
+                "macd": round(float(latest.get('macd', 0)), 2),
+                "macd_signal": round(float(latest.get('macd_signal', 0)), 2),
+                "macd_diff": round(float(latest.get('macd_diff', 0)), 2),
+                "sma_10": round(float(latest.get('sma_10', 0)), 2),
+                "sma_30": round(float(latest.get('sma_30', 0)), 2),
+                "sma_50": round(float(latest.get('sma_50', 0)), 2),
+                "volatility_10": round(float(latest.get('volatility_10', 0)), 4),
+                "volatility_30": round(float(latest.get('volatility_30', 0)), 4),
+                "momentum_score": round(float(latest.get('momentum_score', 0)), 2),
+                "regime": int(latest.get('regime', 1)),
+                "bb_upper": round(float(latest.get('bb_upper', 0)), 2),
+                "bb_middle": round(float(latest.get('bb_middle', 0)), 2),
+                "bb_lower": round(float(latest.get('bb_lower', 0)), 2),
+                "atr": round(float(latest.get('atr', 0)), 2)
+            },
+            "cached_at": datetime.now().isoformat()
+        }
+        
+        # Cache for 30 seconds
+        cache_service.set_live_price(symbol, current_price, datetime.now(), ttl=30)
+        
+        return response
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching live price for {symbol}: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to fetch live price: {str(e)}"
+        )
+
+
+@router.post("/cache/clear")
+async def clear_cache(namespace: str = None):
+    """
+    Clear cache data.
+    
+    Args:
+        namespace: Optional namespace to clear (historical, live, features)
+                  If not provided, clears all cache
+                  
+    Returns:
+        Status message
+    """
+    try:
+        if namespace:
+            count = cache_service.clear_namespace(namespace)
+            return {
+                "status": "success",
+                "message": f"Cleared {count} keys from namespace '{namespace}'"
+            }
+        else:
+            cache_service.clear_all()
+            return {
+                "status": "success",
+                "message": "Cleared all cache data"
+            }
+    except Exception as e:
+        logger.error(f"Error clearing cache: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to clear cache: {str(e)}"
+        )
+
+
+@router.get("/cache/stats")
+async def get_cache_stats():
+    """
+    Get cache statistics.
+    
+    Returns:
+        Cache statistics including size, hit rate, etc.
+    """
+    try:
+        stats = cache_service.get_stats()
+        return {
+            "status": "success",
+            "stats": stats
+        }
+    except Exception as e:
+        logger.error(f"Error getting cache stats: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to get cache stats: {str(e)}"
         )

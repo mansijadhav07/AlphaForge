@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { useParams } from 'next/navigation'
 import { ArrowLeft, TrendingUp, Activity, BarChart3, Target } from 'lucide-react'
 import Link from 'next/link'
@@ -10,6 +10,7 @@ import { IndicatorChart } from '@/components/charts/indicator-chart'
 import { FeatureImpactChart } from '@/components/charts/feature-impact-chart'
 import { FeatureBadge } from '@/components/ui/feature-badge'
 import { RegimeIndicator } from '@/components/ui/regime-indicator'
+import { LiveIndicator } from '@/components/ui/live-indicator'
 import { api, type StockFeatures } from '@/lib/api'
 import { formatCurrency, formatPercentage, getChangeColor } from '@/lib/utils'
 
@@ -20,6 +21,12 @@ export default function StockDetailPage() {
   const [data, setData] = useState<StockFeatures[]>([])
   const [featureImpact, setFeatureImpact] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  const [isLiveMode, setIsLiveMode] = useState(false)
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
+  const [isUpdating, setIsUpdating] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const intervalRef = useRef<NodeJS.Timeout | null>(null)
+  
   const [showIndicators, setShowIndicators] = useState({
     sma10: true,
     sma30: true,
@@ -27,11 +34,18 @@ export default function StockDetailPage() {
     bb: false,
   })
 
-  useEffect(() => {
-    const fetchData = async () => {
+  // Load historical data once on mount
+  const loadHistoricalData = useCallback(async () => {
+    try {
       setLoading(true)
-      const features = await api.getFeatures(symbol)
-      setData(features)
+      setError(null)
+      
+      console.log(`[${symbol}] Loading historical data...`)
+      const response = await api.getHistoricalData(symbol, 30)
+      
+      console.log(`[${symbol}] Loaded ${response.data_points} data points (cache hit: ${response.cache_hit})`)
+      setData(response.data)
+      setLastUpdated(new Date())
       
       // Fetch feature impact data
       try {
@@ -42,14 +56,107 @@ export default function StockDetailPage() {
       }
       
       setLoading(false)
+    } catch (err) {
+      console.error(`[${symbol}] Error loading historical data:`, err)
+      setError('Failed to load data')
+      setLoading(false)
+    }
+  }, [symbol])
+
+  // Update only the latest datapoint
+  const updateLiveData = useCallback(async () => {
+    if (!isLiveMode || data.length === 0) return
+    
+    try {
+      setIsUpdating(true)
+      setError(null)
+      
+      console.log(`[${symbol}] Fetching live update...`)
+      const liveData = await api.getLivePrice(symbol)
+      
+      // Create updated datapoint
+      const updatedPoint: StockFeatures = {
+        ticker: symbol,
+        date: liveData.timestamp.split('T')[0],
+        close: liveData.price,
+        open: liveData.indicators.open,
+        high: liveData.indicators.high,
+        low: liveData.indicators.low,
+        volume: liveData.indicators.volume,
+        return: liveData.change_pct,
+        rsi: liveData.indicators.rsi,
+        macd: liveData.indicators.macd,
+        macd_signal: liveData.indicators.macd_signal,
+        macd_diff: liveData.indicators.macd_diff,
+        sma_10: liveData.indicators.sma_10,
+        sma_30: liveData.indicators.sma_30,
+        sma_50: liveData.indicators.sma_50,
+        volatility_10: liveData.indicators.volatility_10,
+        volatility_30: liveData.indicators.volatility_30,
+        momentum_score: liveData.indicators.momentum_score,
+        regime: liveData.indicators.regime,
+        bb_upper: liveData.indicators.bb_upper,
+        bb_middle: liveData.indicators.bb_middle,
+        bb_lower: liveData.indicators.bb_lower,
+        atr: liveData.indicators.atr
+      }
+      
+      // Update only the last datapoint (no full re-render)
+      setData(prevData => {
+        const newData = [...prevData]
+        newData[newData.length - 1] = updatedPoint
+        return newData
+      })
+      
+      setLastUpdated(new Date())
+      console.log(`[${symbol}] Live update complete - Price: ${liveData.price}`)
+      
+    } catch (err) {
+      console.error(`[${symbol}] Error updating live data:`, err)
+      setError('Update failed')
+    } finally {
+      setIsUpdating(false)
+    }
+  }, [symbol, isLiveMode, data.length])
+
+  // Toggle live mode
+  const toggleLiveMode = useCallback(() => {
+    setIsLiveMode(prev => !prev)
+    setError(null)
+  }, [])
+
+  // Initial load
+  useEffect(() => {
+    loadHistoricalData()
+  }, [loadHistoricalData])
+
+  // Setup live polling
+  useEffect(() => {
+    // Clear existing interval
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current)
+      intervalRef.current = null
     }
 
-    fetchData()
+    if (isLiveMode && data.length > 0) {
+      console.log(`[${symbol}] Starting live mode (30-second polling)`)
+      
+      // Immediate update
+      updateLiveData()
+      
+      // Poll every 30 seconds
+      intervalRef.current = setInterval(updateLiveData, 30000)
+    } else {
+      console.log(`[${symbol}] Live mode disabled`)
+    }
 
-    // Auto-refresh every 10 seconds
-    const interval = setInterval(fetchData, 10000)
-    return () => clearInterval(interval)
-  }, [symbol])
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current)
+        intervalRef.current = null
+      }
+    }
+  }, [isLiveMode, data.length, updateLiveData, symbol])
 
   if (loading || data.length === 0) {
     return (
@@ -113,6 +220,19 @@ export default function StockDetailPage() {
         </div>
       </div>
 
+      {/* Live Mode Indicator */}
+      <Card>
+        <CardContent className="py-4">
+          <LiveIndicator
+            isLive={isLiveMode}
+            lastUpdated={lastUpdated}
+            onToggle={toggleLiveMode}
+            isLoading={isUpdating}
+            error={error}
+          />
+        </CardContent>
+      </Card>
+
       {/* Price Chart */}
       <Card>
         <CardHeader>
@@ -155,7 +275,7 @@ export default function StockDetailPage() {
           </div>
         </CardHeader>
         <CardContent>
-          <PriceChart data={data} showIndicators={showIndicators} />
+          <PriceChart data={data} showIndicators={showIndicators} highlightLast={isLiveMode} />
         </CardContent>
       </Card>
 

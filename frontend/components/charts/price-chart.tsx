@@ -23,11 +23,12 @@ interface PriceChartProps {
     sma50?: boolean
     bb?: boolean
   }
+  highlightLast?: boolean
 }
 
-export function PriceChart({ data, showIndicators = {} }: PriceChartProps) {
+export function PriceChart({ data, showIndicators = {}, highlightLast = false }: PriceChartProps) {
   const chartData = useMemo(() => {
-    return data.map((item) => ({
+    return data.map((item, index) => ({
       date: format(new Date(item.date), 'MMM dd'),
       price: item.close,
       sma10: item.sma_10,
@@ -35,8 +36,9 @@ export function PriceChart({ data, showIndicators = {} }: PriceChartProps) {
       sma50: item.sma_50,
       bb_upper: item.bb_upper,
       bb_lower: item.bb_lower,
+      isLast: highlightLast && index === data.length - 1
     }))
-  }, [data])
+  }, [data, highlightLast])
 
   return (
     <ResponsiveContainer width="100%" height={400}>
@@ -141,7 +143,23 @@ export function PriceChart({ data, showIndicators = {} }: PriceChartProps) {
           dataKey="price"
           stroke="#06b6d4"
           strokeWidth={2}
-          dot={false}
+          dot={(props: any) => {
+            // Highlight last point in live mode
+            if (props.payload?.isLast) {
+              return (
+                <circle
+                  cx={props.cx}
+                  cy={props.cy}
+                  r={6}
+                  fill="#06b6d4"
+                  stroke="#fff"
+                  strokeWidth={2}
+                  className="animate-pulse"
+                />
+              )
+            }
+            return null
+          }}
           name="Price"
           fill="url(#priceGradient)"
         />
