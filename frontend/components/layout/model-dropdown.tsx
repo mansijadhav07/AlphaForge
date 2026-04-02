@@ -42,7 +42,7 @@ export function ModelDropdown() {
 
   return (
     <motion.div
-      className="absolute top-full right-0 mt-2 w-[480px] origin-top-right"
+      className="absolute top-full right-0 mt-2 w-[480px] origin-top-right z-50"
       initial={{ opacity: 0, y: -10, scale: 0.95 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: -10, scale: 0.95 }}
