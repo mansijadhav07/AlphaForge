@@ -5,8 +5,7 @@ import { motion } from 'framer-motion'
 import { Activity, TrendingUp, AlertTriangle, Sparkles } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { StatCard } from '@/components/ui/stat-card'
-import { SkeletonStats } from '@/components/ui/skeleton-loader'
-import { PremiumChartLoader } from '@/components/ui/premium-chart-loader'
+import { FullScreenLoader } from '@/components/ui/fullscreen-loader'
 import { api, type MarketOverview } from '@/lib/api'
 import { formatCurrency, formatPercentage, getChangeColor, getSignalColor } from '@/lib/utils'
 import Link from 'next/link'
@@ -32,10 +31,6 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const fetchData = async () => {
-      // Only show loading on initial load, not on refresh
-      if (!marketData) {
-        setLoading(true)
-      }
       const data = await api.getMarketOverview()
       setMarketData(data)
       setLoading(false)
@@ -49,36 +44,7 @@ export default function DashboardPage() {
   }, [])
 
   if (loading || !marketData) {
-    return (
-      <div className="page-container">
-        <div className="page-header">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="h-10 w-64 bg-white/10 rounded animate-pulse" />
-            <div className="w-7 h-7 bg-cyan-400/20 rounded animate-pulse" />
-          </div>
-          <div className="h-5 w-96 bg-white/10 rounded animate-pulse" />
-        </div>
-        
-        {/* Stats skeleton */}
-        <div className="card-grid-4 mb-8">
-          <SkeletonStats />
-        </div>
-        
-        {/* Premium chart loaders */}
-        <div className="space-y-6">
-          <PremiumChartLoader 
-            height={300} 
-            message="Loading market overview"
-            variant="area"
-          />
-          <PremiumChartLoader 
-            height={250} 
-            message="Analyzing trading signals"
-            variant="line"
-          />
-        </div>
-      </div>
-    )
+    return <FullScreenLoader message="Loading market data" />
   }
 
   const regimeTrend = marketData.market_regime === 'Bull' ? 'up' : marketData.market_regime === 'Bear' ? 'down' : 'neutral'

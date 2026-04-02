@@ -14,6 +14,7 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { InsightCard } from '@/components/ui/insight-card'
 import { StatCard } from '@/components/ui/stat-card'
+import { FullScreenLoader } from '@/components/ui/fullscreen-loader'
 import { api, type Insight, type MarketOverview } from '@/lib/api'
 
 export default function InsightsPage() {
@@ -24,10 +25,6 @@ export default function InsightsPage() {
 
   useEffect(() => {
     const fetchData = async () => {
-      // Only show loading on initial load
-      if (insights.length === 0) {
-        setLoading(true)
-      }
       const [insightsData, marketOverview] = await Promise.all([
         api.getInsights(),
         api.getMarketOverview(),
@@ -56,24 +53,7 @@ export default function InsightsPage() {
   }
 
   if (loading) {
-    return (
-      <div className="page-container">
-        <div className="page-header">
-          <div className="h-10 w-64 skeleton mb-3" />
-          <div className="h-5 w-96 skeleton" />
-        </div>
-        <div className="card-grid-4 mb-8">
-          {[...Array(4)].map((_, i) => (
-            <div key={i} className="h-32 skeleton" />
-          ))}
-        </div>
-        <div className="space-y-4">
-          {[...Array(3)].map((_, i) => (
-            <div key={i} className="h-40 skeleton" />
-          ))}
-        </div>
-      </div>
-    )
+    return <FullScreenLoader message="Loading market insights" />
   }
 
   return (
