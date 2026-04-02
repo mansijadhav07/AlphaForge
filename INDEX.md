@@ -60,6 +60,21 @@ This index helps you navigate all the performance optimization documentation. St
 - Expected results
 - **Best for**: Understanding the planning process
 
+### PREMIUM_LOADING_COMPLETE.md ✨
+**Premium loading experience implementation**
+- Component details
+- Animation specifications
+- Usage examples
+- Testing checklist
+- **Best for**: Understanding the loading UI
+
+### PREMIUM_LOADING_GUIDE.md
+**Design and usage guide for loaders**
+- Design philosophy
+- Implementation guide
+- Customization options
+- **Best for**: Using and customizing loaders
+
 ---
 
 ## 🏗️ Architecture & Design
@@ -188,9 +203,17 @@ api/
   └── market_routes.py               Optimized API endpoints
 
 frontend/
-  ├── app/stock/[symbol]/page.tsx   Smart polling & updates
+  ├── app/
+  │   ├── stock/[symbol]/page.tsx   Smart polling & updates
+  │   ├── dashboard/page.tsx        Optimized dashboard
+  │   ├── insights/page.tsx         Optimized insights
+  │   ├── backtesting/page.tsx      Optimized backtesting
+  │   └── loader-test/page.tsx      Loader demo page ✨
   ├── components/
-  │   ├── ui/live-indicator.tsx     Live mode indicator
+  │   ├── ui/
+  │   │   ├── live-indicator.tsx    Live mode indicator
+  │   │   ├── premium-chart-loader.tsx  Premium loader ✨
+  │   │   └── ghost-chart-loader.tsx    Ghost loader ✨
   │   └── charts/price-chart.tsx    Enhanced chart
   └── lib/api.ts                     API client
 ```
@@ -416,11 +439,11 @@ curl http://localhost:8000/api/cache/stats
 
 ## 📊 Documentation Statistics
 
-- **Total Documents**: 11 main documents
+- **Total Documents**: 13 main documents (including premium loading)
 - **Total Scripts**: 2 helper scripts
-- **Total Code Files**: 6 implementation files
-- **Total Lines**: ~5,000 lines of documentation
-- **Estimated Reading Time**: 4-6 hours (all documents)
+- **Total Code Files**: 9 implementation files (including loaders)
+- **Total Lines**: ~6,000 lines of documentation
+- **Estimated Reading Time**: 5-7 hours (all documents)
 - **Quick Start Time**: 30 minutes
 
 ---
@@ -442,6 +465,6 @@ You now have access to comprehensive documentation covering:
 
 ---
 
-**Last Updated**: April 1, 2026  
-**Version**: 1.0.0  
-**Status**: Complete ✅
+**Last Updated**: April 2, 2026  
+**Version**: 1.1.0  
+**Status**: Complete ✅ (with Premium Loading Experience)

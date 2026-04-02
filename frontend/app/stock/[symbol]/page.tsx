@@ -11,6 +11,7 @@ import { FeatureImpactChart } from '@/components/charts/feature-impact-chart'
 import { FeatureBadge } from '@/components/ui/feature-badge'
 import { RegimeIndicator } from '@/components/ui/regime-indicator'
 import { LiveIndicator } from '@/components/ui/live-indicator'
+import { PremiumChartLoader } from '@/components/ui/premium-chart-loader'
 import { api, type StockFeatures } from '@/lib/api'
 import { formatCurrency, formatPercentage, getChangeColor } from '@/lib/utils'
 
@@ -160,16 +161,51 @@ export default function StockDetailPage() {
 
   if (loading || data.length === 0) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="animate-pulse space-y-6">
-          <div className="h-8 bg-white/10 rounded w-1/4" />
-          <div className="h-96 bg-white/10 rounded" />
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="h-64 bg-white/10 rounded" />
-            <div className="h-64 bg-white/10 rounded" />
-            <div className="h-64 bg-white/10 rounded" />
+      <div className="container mx-auto px-4 py-8 space-y-6">
+        {/* Header skeleton */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center space-x-4">
+            <div className="w-10 h-10 bg-white/10 rounded-lg animate-pulse" />
+            <div>
+              <div className="h-10 w-32 bg-white/10 rounded animate-pulse mb-2" />
+              <div className="h-4 w-48 bg-white/10 rounded animate-pulse" />
+            </div>
+          </div>
+          <div className="text-right">
+            <div className="h-8 w-32 bg-white/10 rounded animate-pulse mb-2" />
+            <div className="h-4 w-24 bg-white/10 rounded animate-pulse" />
           </div>
         </div>
+
+        {/* Premium chart loader */}
+        <PremiumChartLoader 
+          height={400} 
+          message={`Loading ${symbol} data`}
+          variant="line"
+          showVolume={false}
+        />
+
+        {/* Indicator loaders */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <PremiumChartLoader 
+            height={280} 
+            message="Loading RSI"
+            variant="area"
+          />
+          <PremiumChartLoader 
+            height={280} 
+            message="Loading MACD"
+            variant="line"
+          />
+        </div>
+
+        {/* Volume loader */}
+        <PremiumChartLoader 
+          height={200} 
+          message="Loading volume data"
+          variant="candlestick"
+          showVolume={true}
+        />
       </div>
     )
   }

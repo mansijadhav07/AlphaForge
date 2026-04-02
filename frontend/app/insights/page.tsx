@@ -24,7 +24,10 @@ export default function InsightsPage() {
 
   useEffect(() => {
     const fetchData = async () => {
-      setLoading(true)
+      // Only show loading on initial load
+      if (insights.length === 0) {
+        setLoading(true)
+      }
       const [insightsData, marketOverview] = await Promise.all([
         api.getInsights(),
         api.getMarketOverview(),
@@ -36,8 +39,8 @@ export default function InsightsPage() {
 
     fetchData()
 
-    // Auto-refresh every 30 seconds
-    const interval = setInterval(fetchData, 30000)
+    // Reduced refresh to 60 seconds (data is cached for 60s on backend)
+    const interval = setInterval(fetchData, 60000)
     return () => clearInterval(interval)
   }, [])
 

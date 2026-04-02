@@ -4,11 +4,9 @@ import { useEffect, useState } from 'react'
 import {
   TrendingUp,
   Activity,
-  AlertTriangle,
   Target,
   BarChart3,
   DollarSign,
-  Percent,
   TrendingDown,
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -16,6 +14,7 @@ import { Badge } from '@/components/ui/badge'
 import { Select } from '@/components/ui/select'
 import { MetricCard } from '@/components/ui/metric-card'
 import { EquityCurveChart } from '@/components/charts/equity-curve-chart'
+import { PremiumChartLoader } from '@/components/ui/premium-chart-loader'
 import { api, type BacktestResult } from '@/lib/api'
 import { formatCurrency, formatPercentage } from '@/lib/utils'
 
@@ -72,16 +71,30 @@ export default function BacktestingPage() {
 
   if (loading && !results) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="animate-pulse space-y-6">
-          <div className="h-8 bg-white/10 rounded w-1/4" />
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="h-32 bg-white/10 rounded" />
-            ))}
-          </div>
-          <div className="h-96 bg-white/10 rounded" />
+      <div className="container mx-auto px-4 py-8 space-y-6">
+        {/* Header skeleton */}
+        <div className="space-y-2 mb-6">
+          <div className="h-10 w-64 bg-white/10 rounded animate-pulse" />
+          <div className="h-5 w-96 bg-white/10 rounded animate-pulse" />
         </div>
+
+        {/* Config skeleton */}
+        <div className="h-32 bg-white/10 rounded-xl animate-pulse mb-6" />
+
+        {/* Metrics skeleton */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="h-32 bg-white/10 rounded-xl animate-pulse" />
+          ))}
+        </div>
+
+        {/* Premium equity curve loader */}
+        <PremiumChartLoader 
+          height={400} 
+          message="Running backtest simulation"
+          variant="area"
+          showVolume={false}
+        />
       </div>
     )
   }

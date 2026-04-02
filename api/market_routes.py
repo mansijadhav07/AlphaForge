@@ -36,6 +36,11 @@ async def get_market_overview(pgm_service = Depends(get_pgm_service)):
     """
     Get market overview with top stocks and signals.
     
+    OPTIMIZED WITH CACHING:
+    - Cached for 60 seconds
+    - Reduces repeated API calls
+    - Fast response time
+    
     Returns REAL DATA:
     - Latest prices from yfinance
     - PGM-based regime detection
@@ -46,6 +51,12 @@ async def get_market_overview(pgm_service = Depends(get_pgm_service)):
         Market overview data with real market information
     """
     try:
+        # Check cache first (60-second TTL)
+        cached_overview = cache_service.get('market_overview', 'latest')
+        if cached_overview:
+            logger.debug("Returning cached market overview")
+            return cached_overview
+        
         logger.info("Fetching market overview with real data")
         
         # Define symbols to track
@@ -138,13 +149,18 @@ async def get_market_overview(pgm_service = Depends(get_pgm_service)):
                 
                 break
         
-        return MarketOverview(
+        overview = MarketOverview(
             timestamp=datetime.now().isoformat(),
             market_regime=market_regime,
             volatility_index=round(volatility_index, 2),
             top_stocks=top_stocks,
             signals=signals
         )
+        
+        # Cache for 60 seconds
+        cache_service.set('market_overview', 'latest', overview, ttl=60)
+        
+        return overview
         
     except HTTPException:
         raise
@@ -235,6 +251,10 @@ async def get_backtest_results(strategy: str, ticker: str = "AAPL"):
     """
     Get backtesting results for a strategy.
     
+    OPTIMIZED WITH CACHING:
+    - Cached for 1 hour (backtest results don't change)
+    - Instant response for repeated requests
+    
     Returns REAL DATA from precomputed backtest results.
     
     Args:
@@ -245,6 +265,13 @@ async def get_backtest_results(strategy: str, ticker: str = "AAPL"):
         Backtest results with performance metrics and equity curve
     """
     try:
+        # Check cache first (1-hour TTL for backtest results)
+        cache_key = f"{strategy}_{ticker}"
+        cached_results = cache_service.get('backtest', cache_key)
+        if cached_results:
+            logger.debug(f"Returning cached backtest results for {strategy} on {ticker}")
+            return cached_results
+        
         logger.info(f"Fetching backtest results for {strategy} on {ticker}")
         
         # Map frontend strategy names to backend strategy names
@@ -321,6 +348,9 @@ async def get_backtest_results(strategy: str, ticker: str = "AAPL"):
                 'equity_curve': equity_curve
             }
             
+            # Cache for 1 hour (backtest results don't change)
+            cache_service.set('backtest', cache_key, results, ttl=3600)
+            
             return results
         
         # If no precomputed results, return error
@@ -344,6 +374,11 @@ async def get_insights(pgm_service = Depends(get_pgm_service)):
     """
     Get AI-powered market insights.
     
+    OPTIMIZED WITH CACHING:
+    - Cached for 60 seconds
+    - Reduces computation load
+    - Fast response time
+    
     Returns REAL INSIGHTS generated from:
     - PGM predictions and explanations
     - Recent market data analysis
@@ -354,6 +389,12 @@ async def get_insights(pgm_service = Depends(get_pgm_service)):
         List of insights with warnings, opportunities, and market updates
     """
     try:
+        # Check cache first (60-second TTL)
+        cached_insights = cache_service.get('insights', 'latest')
+        if cached_insights:
+            logger.debug("Returning cached insights")
+            return cached_insights
+        
         logger.info("Generating real market insights")
         
         insights = []
@@ -466,6 +507,10 @@ async def get_insights(pgm_service = Depends(get_pgm_service)):
         insights = insights[:10]
         
         logger.info(f"Generated {len(insights)} real insights")
+        
+        # Cache for 60 seconds
+        cache_service.set('insights', 'latest', insights, ttl=60)
+        
         return insights
         
     except Exception as e:
