@@ -17,9 +17,9 @@ import json
 from pathlib import Path
 from datetime import datetime
 
-from feature_store.offline_store import OfflineFeatureStore
-from pgm_model.baseline_models import create_baseline_comparison
-from pgm_model.state_encoding import StateEncoder, create_target_variable
+from data.features.offline_store import OfflineFeatureStore
+from backend.models.baseline_models import create_baseline_comparison
+from backend.models.state_encoding import StateEncoder, create_target_variable
 from sklearn.model_selection import train_test_split
 from utils.logger import get_logger
 

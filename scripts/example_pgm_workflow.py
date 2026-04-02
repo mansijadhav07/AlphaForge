@@ -15,13 +15,13 @@ import numpy as np
 from pathlib import Path
 
 # Import PGM modules
-from pgm_model.state_encoding import StateEncoder, create_target_variable
-from pgm_model.graph_structure import GraphStructure, create_risk_node_data
-from pgm_model.probability_learning import ProbabilityLearner
-from pgm_model.inference_engine import InferenceEngine
-from pgm_model.explanation_engine import ExplanationEngine
-from pgm_model.scenario_simulator import ScenarioSimulator
-from pgm_model.utils import (
+from backend.models.state_encoding import StateEncoder, create_target_variable
+from backend.models.graph_structure import GraphStructure, create_risk_node_data
+from backend.models.probability_learning import ProbabilityLearner
+from backend.models.inference_engine import InferenceEngine
+from backend.models.explanation_engine import ExplanationEngine
+from backend.models.scenario_simulator import ScenarioSimulator
+from backend.models.utils import (
     prepare_data_for_pgm,
     split_train_test,
     evaluate_predictions,
@@ -31,7 +31,7 @@ from pgm_model.utils import (
 )
 
 # Import existing modules
-from feature_store.offline_store import OfflineFeatureStore
+from data.features.offline_store import OfflineFeatureStore
 from utils.logger import get_logger
 
 logger = get_logger(__name__)

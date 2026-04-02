@@ -2,7 +2,7 @@
 
 import pytest
 import numpy as np
-from pgm_model.calibration import (
+from backend.models.calibration import (
     ProbabilityCalibration,
     create_calibration_analysis,
     CalibrationMetrics

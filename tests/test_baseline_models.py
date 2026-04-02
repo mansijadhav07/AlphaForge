@@ -5,7 +5,7 @@ Tests for baseline models module.
 import pytest
 import pandas as pd
 import numpy as np
-from pgm_model.baseline_models import (
+from backend.models.baseline_models import (
     RandomBaseline,
     MajorityBaseline,
     LogisticRegressionBaseline,

@@ -20,9 +20,9 @@ from datetime import datetime
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split
 
-from feature_store.offline_store import OfflineFeatureStore
-from pgm_model.calibration import create_calibration_analysis
-from pgm_model.state_encoding import create_target_variable
+from data.features.offline_store import OfflineFeatureStore
+from backend.models.calibration import create_calibration_analysis
+from backend.models.state_encoding import create_target_variable
 from utils.logger import get_logger
 
 logger = get_logger(__name__)

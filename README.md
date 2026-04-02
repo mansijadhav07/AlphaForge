@@ -79,17 +79,21 @@ Unlike traditional black-box models, AlphaForge provides **transparent, explaina
 ┌────────────────────────▼────────────────────────────────────┐
 │                   Backend (FastAPI)                          │
 │  ┌──────────────────────────────────────────────────────┐  │
-│  │              PGM Module (Core AI)                     │  │
+│  │              backend/models/ (Core AI)                │  │
 │  │  • State Encoding    • Inference Engine              │  │
 │  │  • Graph Structure   • Explanation Engine            │  │
 │  │  • Probability Learn • Scenario Simulator            │  │
 │  │  • Evaluation        • Failure Analysis              │  │
+│  │  • Feature Engineering • Analytics • Backtesting     │  │
 │  └──────────────────────────────────────────────────────┘  │
 │  ┌──────────────────────────────────────────────────────┐  │
-│  │           Feature Engineering Pipeline                │  │
-│  │  • Data Ingestion    • Feature Store                 │  │
-│  │  • Validation        • Analytics                     │  │
-│  │  • Backtesting       • Monitoring                    │  │
+│  │           backend/api/ & backend/services/            │  │
+│  │  • REST Endpoints    • Business Logic                │  │
+│  │  • Caching Service   • Data Service                  │  │
+│  └──────────────────────────────────────────────────────┘  │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │              backend/pipelines/                       │  │
+│  │  • Batch Pipeline    • Streaming Pipeline            │  │
 │  └──────────────────────────────────────────────────────┘  │
 └────────────────────────┬────────────────────────────────────┘
                          │
@@ -99,6 +103,8 @@ Unlike traditional black-box models, AlphaForge provides **transparent, explaina
 │  │ yfinance │  │ Parquet  │  │  Redis   │  │  Logs    │   │
 │  │   API    │  │  Files   │  │  Cache   │  │          │   │
 │  └──────────┘  └──────────┘  └──────────┘  └──────────┘   │
+│     data/        data/         data/          logs/          │
+│   ingestion/   features/     features/                       │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -198,51 +204,36 @@ All documentation is organized in the [`docs/`](./docs/) folder:
 
 ```
 AlphaForge/
-├── 🧠 pgm_model/              # Probabilistic Graphical Models (Core AI)
-│   ├── state_encoding.py      # Continuous → Discrete encoding
-│   ├── graph_structure.py     # Bayesian Network DAG
-│   ├── probability_learning.py # CPT learning from data
-│   ├── inference_engine.py    # Probabilistic inference
-│   ├── explanation_engine.py  # Human-readable explanations
-│   ├── scenario_simulator.py  # What-if analysis
-│   ├── evaluation.py          # Model evaluation metrics
-│   ├── failure_analysis.py    # Failure case analysis
-│   └── utils.py              # PGM utilities
-│
-├── 🔌 api/                    # FastAPI Backend
-│   ├── pgm_routes.py         # PGM API endpoints
-│   ├── schemas.py            # Pydantic models
-│   └── dependencies.py       # Shared dependencies
+├── 🔧 backend/                # All backend logic
+│   ├── api/                   # FastAPI routes & schemas
+│   ├── services/              # Business logic (cache, data)
+│   ├── models/                # ML models (PGM, analytics, backtesting)
+│   └── pipelines/             # Data processing orchestration
 │
 ├── 🎨 frontend/               # Next.js 14 Frontend
-│   ├── app/                  # Pages (App Router)
-│   │   ├── dashboard/        # Market dashboard
-│   │   ├── pgm-graph/        # Interactive PGM visualization
-│   │   ├── feature-impact/   # Feature contribution analysis
-│   │   ├── model-evaluation/ # Model performance metrics
-│   │   ├── model-failures/   # Failure case analysis
-│   │   ├── backtesting/      # Strategy backtesting
-│   │   ├── insights/         # AI insights
-│   │   └── stock/[symbol]/   # Individual stock analysis
-│   ├── components/           # React components
-│   │   ├── ui/              # Base UI components
-│   │   ├── charts/          # Chart components
-│   │   ├── layout/          # Layout components
-│   │   └── pgm/             # PGM-specific components
-│   └── lib/                 # Utilities
+│   ├── app/                   # Pages (App Router)
+│   ├── components/            # React components
+│   └── lib/                   # Utilities and API client
 │
-├── 📊 data_ingestion/         # Data fetching
-├── 🔍 data_validation/        # Data quality
-├── ⚙️ feature_engineering/    # Feature computation
-├── 💾 feature_store/          # Offline/Online storage
-├── 🔄 pipelines/              # Orchestration
-├── 📈 analytics/              # Analysis
-├── 🧪 backtesting/            # Strategy evaluation
-├── 📊 dashboard/              # Streamlit dashboard (legacy)
-├── ⚙️ config/                 # Configuration
-├── 🛠️ utils/                  # Shared utilities
-└── 🧪 tests/                  # Unit tests
+├── 💾 data/                   # Data layer
+│   ├── ingestion/             # Data fetching (yfinance)
+│   ├── validation/            # Data quality checks
+│   ├── features/              # Feature store (Parquet + Redis)
+│   ├── raw/                   # Raw market data (gitignored)
+│   └── processed/             # Computed features (gitignored)
+│
+├── 🧪 tests/                  # Unit & integration tests
+├── 🛠️ utils/                  # Shared utilities (logger, helpers)
+├── ⚙️ config/                 # Configuration files
+└── 📚 docs/                   # Documentation
+    └── examples/              # Example usage scripts
 ```
+
+**Clean root directory** with only 8 essential files:
+- `api_server.py`, `main.py` - Entry points
+- `README.md`, `INSTALLATION.md` - Documentation
+- `requirements.txt`, `setup.py` - Dependencies
+- `Makefile`, `.gitignore` - Build & config
 
 ## 🎮 Usage Examples
 

@@ -5,7 +5,7 @@ Tests for improved discretization module.
 import pytest
 import pandas as pd
 import numpy as np
-from pgm_model.discretization import (
+from backend.models.discretization import (
     FeatureDiscretizer,
     DiscretizationConfig,
     discretize_quantile,

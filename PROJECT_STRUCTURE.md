@@ -1,355 +1,269 @@
-# AlphaForge - Clean Project Structure 📁
+# AlphaForge - Project Structure
 
 ## Overview
 
-This document shows the organized folder structure of AlphaForge after reorganization.
-
-## Root Directory
+AlphaForge follows a clean, minimal, production-ready architecture with clear separation of concerns:
 
 ```
 AlphaForge/
-├── 📄 README.md                    # Main project documentation
-├── 📄 LICENSE                      # MIT License
-├── 📄 .gitignore                   # Git ignore rules
-├── 📄 requirements.txt             # Python dependencies
-├── 📄 Makefile                     # Build automation
-├── 📄 api_server.py                # FastAPI server entry point
-├── 📄 main.py                      # Alternative entry point
+├── backend/              # All backend logic
+│   ├── api/             # FastAPI routes and endpoints
+│   ├── services/        # Business logic and services
+│   ├── models/          # ML models (PGM, analytics, backtesting)
+│   └── pipelines/       # Data processing pipelines
 │
-├── 📁 docs/                        # 📚 Documentation (organized)
-├── 📁 scripts/                     # 🔧 Example scripts
-├── 📁 tests/                       # 🧪 Unit tests
+├── frontend/            # Next.js 14 application
+│   ├── app/            # Pages (App Router)
+│   ├── components/     # React components
+│   └── lib/            # Frontend utilities
 │
-├── 📁 pgm_model/                   # 🧠 PGM Core AI
-├── 📁 api/                         # 🔌 FastAPI Backend
-├── 📁 frontend/                    # ⚛️ Next.js Frontend
+├── data/                # Data layer
+│   ├── ingestion/       # Data fetching from external sources
+│   ├── validation/      # Data quality checks
+│   ├── features/        # Feature store (offline/online)
+│   ├── raw/            # Raw market data (gitignored)
+│   └── processed/      # Processed features (gitignored)
 │
-├── 📁 feature_engineering/         # ⚙️ Feature computation
-├── 📁 feature_store/               # 💾 Storage management
-├── 📁 data_ingestion/              # 📥 Data fetching
-├── 📁 data_validation/             # 🔍 Data quality
-├── 📁 backtesting/                 # 🧪 Strategy testing
-├── 📁 analytics/                   # 📊 Analysis tools
-├── 📁 pipelines/                   # 🔄 Data pipelines
-├── 📁 dashboard/                   # 📊 Streamlit (legacy)
-├── 📁 utils/                       # 🛠️ Utilities
-├── 📁 config/                      # ⚙️ Configuration
-│
-├── 📁 data/                        # 💾 Data storage (gitignored)
-└── 📁 logs/                        # 📝 Log files (gitignored)
+├── tests/              # Unit and integration tests
+├── utils/              # Shared utilities (logger, helpers)
+├── config/             # Configuration files
+└── docs/               # Documentation
+    └── examples/       # Example usage scripts
 ```
 
-## Detailed Structure
+## Folder Details
 
-### 📚 Documentation (`docs/`)
+### backend/
 
-```
-docs/
-├── README.md                       # Documentation index
-│
-├── setup/                          # Installation & setup
-│   ├── INSTALLATION.md            # Complete setup guide
-│   └── QUICKSTART.md              # Quick start guide
-│
-├── overview/                       # Project overview
-│   ├── PROJECT_ANALYSIS.md        # Complete analysis
-│   ├── PROJECT_SUMMARY.md         # High-level summary
-│   └── FEATURES.md                # Feature list
-│
-├── architecture/                   # System design
-│   └── ARCHITECTURE.md            # Architecture overview
-│
-├── pgm/                           # PGM documentation
-│   ├── WHAT_IS_PGM.md            # Introduction
-│   ├── PGM_DOCUMENTATION.md      # Complete guide
-│   ├── PGM_INTEGRATION_GUIDE.md  # Integration steps
-│   ├── PGM_MODULE_SUMMARY.md     # Module overview
-│   └── PGM_COMPLETION_REPORT.md  # Implementation report
-│
-├── features/                      # Feature documentation
-│   ├── PGM_GRAPH_SUMMARY.md      # Graph visualization
-│   ├── FEATURE_CONTRIBUTION_COMPLETE.md  # Feature impact
-│   ├── MODEL_EVALUATION_COMPLETE.md      # Model evaluation
-│   └── FAILURE_ANALYSIS_COMPLETE.md      # Failure analysis
-│
-└── performance/                   # Performance docs
-    └── PERFORMANCE_FIXES.md       # Optimizations
-```
+All backend application logic organized by function:
 
-### 🔧 Scripts (`scripts/`)
+- **api/** - FastAPI routes, schemas, and dependencies
+  - `pgm_routes.py` - PGM prediction endpoints
+  - `market_routes.py` - Market data endpoints
+  - `discretization_routes.py` - Discretization endpoints
+  - `dependencies.py` - Shared dependencies and service initialization
+  - `schemas.py` - Pydantic models for request/response
 
-```
-scripts/
-├── example_workflow.py            # General workflow example
-├── example_pgm_workflow.py        # PGM workflow example
-└── demo_pgm.py                    # PGM demo script
-```
+- **services/** - Business logic layer
+  - `data_service.py` - Data fetching and caching
+  - `cache_service.py` - Redis and in-memory caching
 
-### 🧪 Tests (`tests/`)
+- **pipelines/** - Data processing orchestration
+  - `batch_pipeline.py` - Historical data processing
+  - `streaming_pipeline.py` - Real-time data processing
 
-```
-tests/
-├── __init__.py
-├── test_pgm_module.py             # PGM module tests
-├── test_ingestion.py              # Data ingestion tests
-└── ...                            # More test files
-```
+- **models/** - All ML and analytics models (19 modules)
+  - PGM modules: state_encoding, graph_structure, inference_engine, etc.
+  - `analyzer.py` - Analytics engine
+  - `features.py` - Feature engineering
+  - `backtest_engine.py` - Backtesting engine
+  - `strategies.py` - Trading strategies
+  - `baseline_models.py` - Baseline model comparisons
 
-### 🧠 PGM Model (`pgm_model/`)
+### frontend/
 
-```
-pgm_model/
-├── __init__.py
-├── state_encoding.py              # Continuous → Discrete
-├── graph_structure.py             # Bayesian Network DAG
-├── probability_learning.py        # CPT learning
-├── inference_engine.py            # Probabilistic inference
-├── explanation_engine.py          # Human explanations
-├── scenario_simulator.py          # What-if analysis
-├── evaluation.py                  # Model evaluation
-├── failure_analysis.py            # Failure analysis
-└── utils.py                       # Utilities
-```
+Next.js 14 application with modern React patterns:
 
-### 🔌 API (`api/`)
+- **app/** - Pages using App Router
+  - `dashboard/` - Main dashboard
+  - `stock/[symbol]/` - Individual stock analysis
+  - `pgm-graph/` - Bayesian network visualization
+  - `feature-impact/` - Feature importance
+  - `model-evaluation/` - Model metrics
+  - `calibration/` - Probability calibration
+  - `baseline-comparison/` - Model comparison
+  - `discretization/` - Feature discretization
+  - `structure-analysis/` - Dependency analysis
+  - `insights/` - AI insights
+  - `backtesting/` - Strategy backtesting
 
-```
-api/
-├── __init__.py
-├── pgm_routes.py                  # PGM endpoints (10)
-├── market_routes.py               # Market endpoints (4)
-├── schemas.py                     # Pydantic models
-└── dependencies.py                # Shared dependencies
-```
+- **components/** - Reusable React components
+  - `ui/` - Base UI components
+  - `charts/` - Chart components (Recharts)
+  - `layout/` - Layout components (navbar, etc.)
+  - `pgm/` - PGM-specific components
 
-### ⚛️ Frontend (`frontend/`)
+- **lib/** - Frontend utilities
+  - `api.ts` - API client
+  - `utils.ts` - Helper functions
 
-```
-frontend/
-├── app/                           # Next.js pages (9)
-│   ├── page.tsx                   # Home (splash)
-│   ├── layout.tsx                 # Root layout
-│   ├── globals.css                # Global styles
-│   ├── dashboard/                 # Market dashboard
-│   ├── stock/[symbol]/            # Stock detail
-│   ├── backtesting/               # Backtesting
-│   ├── insights/                  # Insights
-│   ├── pgm-graph/                 # PGM graph
-│   ├── feature-impact/            # Feature impact
-│   ├── model-evaluation/          # Model evaluation
-│   └── model-failures/            # Failure analysis
-│
-├── components/                    # React components (30+)
-│   ├── ui/                        # Base UI (8)
-│   │   ├── card.tsx
-│   │   ├── badge.tsx
-│   │   ├── animated-card.tsx
-│   │   ├── stat-card.tsx
-│   │   ├── skeleton-loader.tsx
-│   │   ├── insight-card.tsx
-│   │   ├── regime-indicator.tsx
-│   │   └── feature-badge.tsx
-│   ├── charts/                    # Charts (6)
-│   │   ├── price-chart.tsx
-│   │   ├── indicator-chart.tsx
-│   │   ├── equity-curve-chart.tsx
-│   │   ├── feature-impact-chart.tsx
-│   │   ├── confusion-matrix.tsx
-│   │   └── calibration-curve.tsx
-│   ├── pgm/                       # PGM components
-│   │   └── network-graph.tsx
-│   └── layout/                    # Layout
-│       └── navbar.tsx
-│
-├── lib/                           # Utilities
-│   ├── api.ts                     # API service
-│   ├── utils.ts                   # Helper functions
-│   └── config.ts                  # Configuration
-│
-├── public/                        # Static assets
-├── README.md                      # Frontend docs
-├── SETUP_GUIDE.md                 # Setup guide
-├── PREMIUM_UI_COMPLETE.md         # UI guide
-├── PERFORMANCE_GUIDE.md           # Performance guide
-├── package.json                   # Dependencies
-├── tsconfig.json                  # TypeScript config
-├── tailwind.config.ts             # Tailwind config
-└── next.config.js                 # Next.js config
-```
+### data/
 
-### ⚙️ Feature Engineering (`feature_engineering/`)
+Data layer with clear separation:
+
+- **ingestion/** - Fetch data from yfinance and other sources
+- **validation/** - Data quality checks and validation rules
+- **features/** - Feature store implementation
+  - `offline_store.py` - Parquet-based offline storage
+  - `online_store.py` - Redis-based online storage
+- **raw/** - Raw market data (OHLCV) - gitignored
+- **processed/** - Computed features ready for ML - gitignored
+  - `analytics/` - Analytics results
+  - `backtesting/` - Backtest results
+  - `calibration/` - Calibration data
+  - `evaluation/` - Model evaluation results
+  - `failures/` - Failure analysis data
+  - `pgm_model/` - Trained PGM models
+
+### Other Directories
+
+- **tests/** - All unit and integration tests
+- **utils/** - Shared utilities (logger, helpers)
+- **config/** - Configuration files (config.yaml)
+- **docs/** - Comprehensive documentation
+  - `examples/` - Example usage scripts (moved from root)
+  - `features/` - Feature documentation
+  - `architecture/` - Architecture docs
+  - `pgm/` - PGM documentation
+  - `setup/` - Setup guides
+
+## Root Files
+
+Only essential files in root:
+- `api_server.py` - FastAPI server entry point
+- `main.py` - CLI entry point
+- `README.md` - Main documentation
+- `INSTALLATION.md` - Installation guide
+- `PROJECT_STRUCTURE.md` - This file
+- `requirements.txt` - Python dependencies
+- `setup.py` - Package setup
+- `Makefile` - Build automation
+- `.gitignore` - Git ignore rules
+
+## Data Flow
 
 ```
-feature_engineering/
-├── __init__.py
-└── features.py                    # 50+ technical indicators
+┌─────────────────────────────────────────────────────────────┐
+│                    External Data Sources                     │
+│                      (yfinance API)                          │
+└────────────────────────┬────────────────────────────────────┘
+                         │
+                         ▼
+┌─────────────────────────────────────────────────────────────┐
+│                  data/ingestion/                             │
+│              Fetch OHLCV market data                         │
+└────────────────────────┬────────────────────────────────────┘
+                         │
+                         ▼
+┌─────────────────────────────────────────────────────────────┐
+│                  data/validation/                            │
+│         Validate data quality and completeness               │
+└────────────────────────┬────────────────────────────────────┘
+                         │
+                         ▼
+┌─────────────────────────────────────────────────────────────┐
+│              backend/models/features.py                      │
+│        Compute 50+ technical indicators                      │
+└────────────────────────┬────────────────────────────────────┘
+                         │
+                         ▼
+┌─────────────────────────────────────────────────────────────┐
+│                  data/features/                              │
+│         Store features (Parquet + Redis)                     │
+└────────────────────────┬────────────────────────────────────┘
+                         │
+                         ▼
+┌─────────────────────────────────────────────────────────────┐
+│                  backend/models/                             │
+│         PGM Training and Inference                           │
+│  • State Encoding  • Graph Structure                         │
+│  • Probability Learning  • Inference                         │
+└────────────────────────┬────────────────────────────────────┘
+                         │
+                         ▼
+┌─────────────────────────────────────────────────────────────┐
+│                  backend/api/                                │
+│              REST API Endpoints                              │
+└────────────────────────┬────────────────────────────────────┘
+                         │
+                         ▼
+┌─────────────────────────────────────────────────────────────┐
+│                    frontend/                                 │
+│         Next.js UI with visualizations                       │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-### 💾 Feature Store (`feature_store/`)
+## Import Patterns
 
-```
-feature_store/
-├── __init__.py
-├── offline_store.py               # Parquet storage
-└── online_store.py                # Redis storage
-```
+### Backend Modules
+```python
+# PGM models
+from backend.models.state_encoding import StateEncoder
+from backend.models.inference_engine import InferenceEngine
 
-### 📥 Data Ingestion (`data_ingestion/`)
+# Services
+from backend.services.cache_service import get_cache_service
+from backend.services.data_service import DataService
 
-```
-data_ingestion/
-├── __init__.py
-└── ingestion.py                   # yfinance integration
-```
-
-### 🔍 Data Validation (`data_validation/`)
-
-```
-data_validation/
-├── __init__.py
-└── validator.py                   # Data quality checks
+# API
+from backend.api.dependencies import get_pgm_service
+from backend.api.schemas import PredictionRequest
 ```
 
-### 🧪 Backtesting (`backtesting/`)
+### Data Modules
+```python
+# Data ingestion
+from data.ingestion.ingestion import DataIngestion
 
-```
-backtesting/
-├── __init__.py
-├── backtest_engine.py             # Backtesting engine
-└── strategies.py                  # Trading strategies
-```
+# Data validation
+from data.validation.validator import DataValidator
 
-### 📊 Analytics (`analytics/`)
-
-```
-analytics/
-├── __init__.py
-└── analyzer.py                    # Analysis tools
+# Feature store
+from data.features.offline_store import OfflineFeatureStore
+from data.features.online_store import OnlineFeatureStore
 ```
 
-### 🔄 Pipelines (`pipelines/`)
-
-```
-pipelines/
-├── __init__.py
-├── batch_pipeline.py              # Batch processing
-└── streaming_pipeline.py          # Streaming simulation
+### Pipelines
+```python
+# Pipelines
+from backend.pipelines.batch_pipeline import BatchPipeline
+from backend.pipelines.streaming_pipeline import StreamingPipeline
 ```
 
-### 🛠️ Utilities (`utils/`)
+## Benefits of This Structure
 
-```
-utils/
-├── __init__.py
-├── logger.py                      # Logging setup
-└── helpers.py                     # Helper functions
-```
+1. **Minimal Root**: Only 8 files in root directory
+2. **Clear Hierarchy**: 7 main folders with logical grouping
+3. **Separation of Concerns**: Backend, data, and frontend are distinct
+4. **Easy Navigation**: Less folder jumping, clearer hierarchy
+5. **Production-Ready**: Follows industry best practices
+6. **Scalable**: Easy to add new features within existing structure
+7. **Clean**: No clutter, no unnecessary folders
 
-### ⚙️ Configuration (`config/`)
+## Comparison
 
-```
-config/
-├── __init__.py
-└── config.yaml                    # Configuration file
-```
+### Before Refactoring
+- 15+ top-level folders
+- Fragmented structure
+- Unclear organization
+- Hard to navigate
 
-### 💾 Data Storage (`data/`) - Gitignored
+### After Refactoring
+- 7 main folders (backend, frontend, data, tests, utils, config, docs)
+- Clear separation of concerns
+- Logical grouping
+- Easy to navigate
+- Production-ready
 
-```
-data/
-├── raw/                           # Raw market data
-│   ├── AAPL_*.parquet
-│   └── TSLA_*.parquet
-├── features/                      # Computed features
-│   └── offline/
-│       ├── example_features/
-│       └── market_features/
-├── validated/                     # Validated data
-├── analytics/                     # Analysis outputs
-│   ├── correlation_heatmap.png
-│   ├── feature_importance.png
-│   └── pgm_graph_structure.png
-└── backtesting/                   # Backtest results
-    ├── *_Strategy_history.parquet
-    ├── *_Strategy_metrics.txt
-    └── *_Strategy_trades.csv
-```
+## Migration Notes
 
-## File Count Summary
+All imports have been automatically updated. The application functionality remains identical - only the folder structure has changed.
 
-```
-📁 Total Folders:     25+
-📄 Python Files:      40+
-📄 TypeScript Files:  60+
-📄 Documentation:     20+
-📄 Config Files:      10+
-───────────────────────────
-📊 Total Files:       130+
-```
+Key changes:
+- `examples/` → `docs/examples/`
+- `data/validated/` → `data/processed/`
+- `data/pgm_model/` → `data/processed/pgm_model/`
+- All other data subdirectories → `data/processed/`
 
-## Key Benefits of This Structure
+## Verification
 
-✅ **Organized Documentation** - All docs in `docs/` folder  
-✅ **Clear Separation** - Code, docs, tests, scripts separated  
-✅ **Easy Navigation** - Logical folder hierarchy  
-✅ **Scalable** - Easy to add new modules  
-✅ **Professional** - Industry-standard structure  
-✅ **IDE Friendly** - Better autocomplete and search  
-✅ **Git Friendly** - Cleaner diffs and history  
+Run the verification script to ensure everything is working:
 
-## Quick Access
-
-### Want to...
-
-**Read documentation?**
-→ Go to `docs/` folder
-
-**Run examples?**
-→ Go to `scripts/` folder
-
-**Run tests?**
-→ Go to `tests/` folder
-
-**Work on backend?**
-→ Go to `api/` or `pgm_model/`
-
-**Work on frontend?**
-→ Go to `frontend/`
-
-**Check data?**
-→ Go to `data/` folder
-
-## Navigation Tips
-
-### VS Code
-- Use `Cmd+P` (Mac) or `Ctrl+P` (Windows) to quickly find files
-- Use folder icons to identify module types
-- Collapse folders you're not working on
-
-### Terminal
 ```bash
-# List documentation
-ls docs/
-
-# List scripts
-ls scripts/
-
-# List tests
-ls tests/
-
-# Find a file
-find . -name "*.py" | grep pgm
+python3 scripts/verify_structure.py
 ```
 
-### Git
-```bash
-# See what changed in docs
-git diff docs/
-
-# See what changed in frontend
-git diff frontend/
-```
-
----
-
-**This structure makes AlphaForge professional, maintainable, and easy to navigate! 🎉**
+Expected output:
+- ✅ All imports working (9/9 passed)
+- ✅ Directory structure correct (15/15 passed)
+- ✅ Old directories removed (11/11 removed)

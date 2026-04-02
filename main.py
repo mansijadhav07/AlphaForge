@@ -6,9 +6,9 @@ from pathlib import Path
 
 from config import config
 from utils.logger import setup_logging, get_logger
-from pipelines import BatchPipeline, StreamingPipeline
-from analytics import FeatureAnalyzer
-from feature_store import OfflineFeatureStore, OnlineFeatureStore
+from backend.pipelines import BatchPipeline, StreamingPipeline
+from backend.models import FeatureAnalyzer
+from data.features import OfflineFeatureStore, OnlineFeatureStore
 
 # Setup logging
 setup_logging()

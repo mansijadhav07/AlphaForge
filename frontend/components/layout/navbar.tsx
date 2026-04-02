@@ -26,7 +26,7 @@ export function Navbar() {
 
   return (
     <motion.nav 
-      className="fixed top-0 z-50 w-full backdrop-blur-xl bg-gray-950/80 border-b border-white/10"
+      className="fixed top-0 z-[100] w-full backdrop-blur-xl bg-gray-950/80 border-b border-white/10"
       initial={{ y: -100 }}
       animate={{ y: 0 }}
       transition={{ duration: 0.4, ease: [0.25, 0.1, 0.25, 1] }}
@@ -103,7 +103,7 @@ export function Navbar() {
 
             {/* Model Intelligence Dropdown */}
             <div 
-              className="relative"
+              className="relative z-[110]"
               onMouseEnter={() => setIsModelDropdownOpen(true)}
               onMouseLeave={() => setIsModelDropdownOpen(false)}
             >

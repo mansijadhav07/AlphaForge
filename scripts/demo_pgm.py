@@ -3,12 +3,12 @@ Quick demo to visualize PGM predictions.
 """
 
 import pandas as pd
-from pgm_model.state_encoding import StateEncoder
-from pgm_model.graph_structure import GraphStructure
-from pgm_model.probability_learning import ProbabilityLearner
-from pgm_model.inference_engine import InferenceEngine
-from pgm_model.explanation_engine import ExplanationEngine
-from feature_store.offline_store import OfflineFeatureStore
+from backend.models.state_encoding import StateEncoder
+from backend.models.graph_structure import GraphStructure
+from backend.models.probability_learning import ProbabilityLearner
+from backend.models.inference_engine import InferenceEngine
+from backend.models.explanation_engine import ExplanationEngine
+from data.features.offline_store import OfflineFeatureStore
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -38,8 +38,8 @@ def demo_pgm():
     encoded_df = encoder.fit_transform(df)
     
     # Add target
-    from pgm_model.state_encoding import create_target_variable
-    from pgm_model.graph_structure import create_risk_node_data
+    from backend.models.state_encoding import create_target_variable
+    from backend.models.graph_structure import create_risk_node_data
     encoded_df = create_target_variable(encoded_df, horizon=5)
     encoded_df = create_risk_node_data(encoded_df)
     encoded_df = encoded_df.dropna(subset=['future_return_state'])

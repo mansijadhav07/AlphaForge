@@ -10,10 +10,10 @@ from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
 import uvicorn
 
-from api.pgm_routes import router as pgm_router
-from api.market_routes import router as market_router
-from api.discretization_routes import router as discretization_router
-from api.dependencies import initialize_pgm_service
+from backend.api.pgm_routes import router as pgm_router
+from backend.api.market_routes import router as market_router
+from backend.api.discretization_routes import router as discretization_router
+from backend.api.dependencies import initialize_pgm_service
 from utils.logger import setup_logging, get_logger
 
 # Setup logging

@@ -24,9 +24,9 @@ from typing import Dict, List
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from pgm_model.utils import load_pgm_model
-from pgm_model.evaluation import ModelEvaluator
-from feature_store.offline_store import OfflineFeatureStore
+from backend.models.utils import load_pgm_model
+from backend.models.evaluation import ModelEvaluator
+from data.features.offline_store import OfflineFeatureStore
 from utils.logger import setup_logging, get_logger
 
 setup_logging()
@@ -358,7 +358,7 @@ def main():
         state_encoder, graph_structure, prob_learner = load_pgm_model('data/pgm_model')
         
         # Create inference engine
-        from pgm_model.inference_engine import InferenceEngine
+        from backend.models.inference_engine import InferenceEngine
         inference_engine = InferenceEngine(graph_structure, prob_learner)
         
         # Package as dict for convenience
