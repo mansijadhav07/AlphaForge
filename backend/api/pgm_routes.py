@@ -562,10 +562,10 @@ async def get_model_evaluation(
         
         # Load precomputed evaluation results
         from backend.models.evaluation import ModelEvaluator
-        evaluator = ModelEvaluator(results_dir="data/evaluation")
+        evaluator = ModelEvaluator(results_dir="data/processed/evaluation")
         
         # Try to load from standard location
-        eval_file = Path(f"data/evaluation/{symbol}_evaluation.json")
+        eval_file = Path(f"data/processed/evaluation/{symbol}_evaluation.json")
         
         if eval_file.exists():
             logger.info(f"Loading precomputed evaluation for {symbol}")
@@ -626,7 +626,7 @@ async def get_failure_analysis(
         logger.info(f"Getting failure analysis for {symbol}")
         
         # Load precomputed failure data
-        failure_file = Path(f"data/failures/{symbol}_failures.json")
+        failure_file = Path(f"data/processed/failures/{symbol}_failures.json")
         
         if not failure_file.exists():
             raise HTTPException(
@@ -1012,7 +1012,7 @@ async def get_baseline_comparison(
         logger.info(f"Baseline comparison requested for {symbol}")
         
         # Try to load pre-computed comparison results first
-        comparison_file = Path(f'data/baseline_comparison/{symbol}_comparison.json')
+        comparison_file = Path(f'data/processed/baseline_comparison/{symbol}_comparison.json')
         if comparison_file.exists():
             logger.info(f"Loading pre-computed comparison for {symbol}")
             try:
@@ -1197,7 +1197,7 @@ async def get_calibration_analysis(
         logger.info(f"Calibration analysis requested for {symbol}")
         
         # Try to load pre-computed calibration results first
-        calibration_file = Path(f'data/calibration/{symbol}_calibration.json')
+        calibration_file = Path(f'data/processed/calibration/{symbol}_calibration.json')
         if calibration_file.exists():
             logger.info(f"Loading pre-computed calibration for {symbol}")
             try:
