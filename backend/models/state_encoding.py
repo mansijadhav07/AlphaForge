@@ -102,6 +102,49 @@ class StateEncoder:
                 'thresholds': [-0.5, 0.5],
                 'labels': ['downtrend', 'flat', 'uptrend'],
                 'description': '30-day trend slope'
+            },
+            # ENHANCEMENT: New feature encoding rules
+            'return_lag_1': {
+                'type': 'threshold',
+                'thresholds': [-0.01, 0.01],
+                'labels': ['negative', 'neutral', 'positive'],
+                'description': '1-day lagged return'
+            },
+            'return_mean_5d': {
+                'type': 'threshold',
+                'thresholds': [-0.005, 0.005],
+                'labels': ['negative', 'neutral', 'positive'],
+                'description': '5-day average return'
+            },
+            'return_std_5d': {
+                'type': 'quantile',
+                'n_bins': 3,
+                'labels': ['low', 'medium', 'high'],
+                'description': '5-day return volatility'
+            },
+            'price_acceleration': {
+                'type': 'threshold',
+                'thresholds': [-0.005, 0.005],
+                'labels': ['decelerating', 'stable', 'accelerating'],
+                'description': 'Price acceleration'
+            },
+            'rsi_momentum': {
+                'type': 'threshold',
+                'thresholds': [-5, 5],
+                'labels': ['falling', 'stable', 'rising'],
+                'description': 'RSI rate of change'
+            },
+            'macd_strength': {
+                'type': 'quantile',
+                'n_bins': 3,
+                'labels': ['weak', 'moderate', 'strong'],
+                'description': 'MACD signal strength'
+            },
+            'price_position_20d': {
+                'type': 'threshold',
+                'thresholds': [0.3, 0.7],
+                'labels': ['low', 'middle', 'high'],
+                'description': 'Price position in 20-day range'
             }
         }
     
@@ -363,6 +406,7 @@ def create_target_variable(df: pd.DataFrame, horizon: int = 5,
         df: DataFrame with price data
         horizon: Number of periods ahead to predict
         threshold: Threshold for positive/negative classification
+                  Default 0.02 (2%), but can use 0.005 (0.5%) for less noisy labels
         
     Returns:
         DataFrame with future_return and future_return_state columns
@@ -373,12 +417,13 @@ def create_target_variable(df: pd.DataFrame, horizon: int = 5,
     result['future_return'] = result.groupby('ticker')['close'].shift(-horizon) / result['close'] - 1
     
     # Encode future return as state
+    # Using smaller threshold reduces noise from random small movements
     result['future_return_state'] = pd.cut(
         result['future_return'],
         bins=[-np.inf, -threshold, threshold, np.inf],
         labels=['negative', 'neutral', 'positive']
     ).astype(str)
     
-    logger.info(f"Created target variable with {horizon}-period horizon")
+    logger.info(f"Created target variable with {horizon}-period horizon and {threshold:.3f} threshold")
     
     return result

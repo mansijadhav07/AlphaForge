@@ -457,8 +457,9 @@ def create_baseline_comparison(X_train: pd.DataFrame,
                                y_train: pd.Series,
                                X_test: pd.DataFrame,
                                y_test: pd.Series,
-                               include_pgm: bool = False,
-                               pgm_predictions: Optional[np.ndarray] = None) -> Dict:
+                               include_pgm: bool = True,
+                               pgm_predictions: Optional[np.ndarray] = None,
+                               pgm_probabilities: Optional[np.ndarray] = None) -> Dict:
     """
     Create a complete baseline comparison.
     
@@ -467,8 +468,9 @@ def create_baseline_comparison(X_train: pd.DataFrame,
         y_train: Training target
         X_test: Test features
         y_test: Test target
-        include_pgm: Whether to include PGM in comparison
+        include_pgm: Whether to include PGM in comparison (default: True)
         pgm_predictions: PGM predictions (if include_pgm=True)
+        pgm_probabilities: PGM probability predictions for log loss calculation
         
     Returns:
         Comparison results dictionary
@@ -478,17 +480,9 @@ def create_baseline_comparison(X_train: pd.DataFrame,
     # Initialize comparison
     comparison = BaselineComparison()
     
-    # Add baseline models
-    comparison.add_model('Random', RandomBaseline())
-    comparison.add_model('Majority Class', MajorityBaseline())
-    comparison.add_model('Logistic Regression', LogisticRegressionBaseline())
-    
-    # Run comparison
-    results = comparison.compare_all(X_train, y_train, X_test, y_test)
-    
-    # Add PGM if provided
+    # Add PGM first (as the primary model)
     if include_pgm and pgm_predictions is not None:
-        logger.info("Adding PGM to comparison...")
+        logger.info("Adding PGM (Bayesian Network) as primary model...")
         
         # Calculate PGM metrics
         accuracy = accuracy_score(y_test, pgm_predictions)
@@ -498,20 +492,51 @@ def create_baseline_comparison(X_train: pd.DataFrame,
         cm = confusion_matrix(y_test, pgm_predictions)
         report = classification_report(y_test, pgm_predictions, output_dict=True, zero_division=0)
         
+        # Calculate log loss if probabilities provided
+        logloss = None
+        if pgm_probabilities is not None:
+            try:
+                if y_test.dtype == 'object' or isinstance(y_test.iloc[0], str):
+                    le = LabelEncoder()
+                    y_test_encoded = le.fit_transform(y_test)
+                else:
+                    y_test_encoded = y_test
+                logloss = log_loss(y_test_encoded, pgm_probabilities)
+            except Exception as e:
+                logger.warning(f"Could not calculate log loss for PGM: {e}")
+        
         pgm_metrics = ModelMetrics(
-            model_name='PGM (Bayesian Network)',
+            model_name='Bayesian Network (PGM)',
             accuracy=float(accuracy),
             precision=float(precision),
             recall=float(recall),
             f1_score=float(f1),
-            log_loss=None,  # PGM doesn't provide probabilities in same format
+            log_loss=float(logloss) if logloss is not None else None,
             confusion_matrix=cm.tolist(),
             classification_report=report,
             training_time=0.0,  # Already trained
             prediction_time=0.0  # Already predicted
         )
         
-        results['PGM (Bayesian Network)'] = pgm_metrics
+        comparison.models['Bayesian Network (PGM)'] = None  # Placeholder
+        comparison.results['Bayesian Network (PGM)'] = pgm_metrics
+    
+    # Add baseline models for comparison
+    comparison.add_model('Logistic Regression', LogisticRegressionBaseline())
+    comparison.add_model('Majority Class', MajorityBaseline())
+    comparison.add_model('Random', RandomBaseline())
+    
+    # Run comparison for baseline models
+    baseline_results = comparison.compare_all(X_train, y_train, X_test, y_test)
+    
+    # Merge results
+    if include_pgm and pgm_predictions is not None:
+        results = {'Bayesian Network (PGM)': comparison.results['Bayesian Network (PGM)']}
+        results.update(baseline_results)
+    else:
+        results = baseline_results
+    
+    comparison.results = results
     
     # Get summary
     summary_df = comparison.get_comparison_summary()

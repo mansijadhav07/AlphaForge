@@ -204,6 +204,13 @@ class FeatureEngineer:
         for lag in self.volume_lags:
             df[f'volume_lag_{lag}'] = df['volume'].shift(lag)
         
+        # ENHANCEMENT: Additional short-term lags (1, 2, 3 days) for better prediction
+        for lag in [1, 2, 3]:
+            if f'return_lag_{lag}' not in df.columns:
+                df[f'return_lag_{lag}'] = df['return'].shift(lag)
+            if f'volume_change_lag_{lag}' not in df.columns:
+                df[f'volume_change_lag_{lag}'] = df['volume'].pct_change().shift(lag)
+        
         return df
     
     def _compute_advanced_features(self, df: pd.DataFrame) -> pd.DataFrame:
@@ -228,6 +235,30 @@ class FeatureEngineer:
         # Volume momentum
         df['volume_sma_20'] = df['volume'].rolling(window=20).mean()
         df['volume_to_sma'] = df['volume'] / df['volume_sma_20']
+        
+        # ENHANCEMENT: Rolling statistics for recent trends
+        for window in [3, 5, 7]:
+            df[f'return_mean_{window}d'] = df['return'].rolling(window).mean()
+            df[f'return_std_{window}d'] = df['return'].rolling(window).std()
+        
+        # ENHANCEMENT: Acceleration features (rate of change of change)
+        df['price_acceleration'] = df['return'] - df['return'].shift(1)
+        df['volume_acceleration'] = df['volume'].pct_change() - df['volume'].pct_change().shift(1)
+        
+        # ENHANCEMENT: RSI momentum and divergence
+        if 'rsi' in df.columns:
+            df['rsi_momentum'] = df['rsi'].diff()
+            df['rsi_divergence'] = df['rsi'] - df['rsi'].rolling(10).mean()
+        
+        # ENHANCEMENT: MACD strength and trend
+        if 'macd_diff' in df.columns:
+            df['macd_strength'] = df['macd_diff'].abs()
+            df['macd_trend'] = (df['macd_diff'] > 0).astype(int).rolling(5).mean()
+        
+        # ENHANCEMENT: Price position in recent range
+        high_20 = df['high'].rolling(20).max()
+        low_20 = df['low'].rolling(20).min()
+        df['price_position_20d'] = (df['close'] - low_20) / (high_20 - low_20 + 1e-10)
         
         return df
     

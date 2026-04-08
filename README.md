@@ -167,36 +167,20 @@ You'll see a premium animated splash screen, then be redirected to the dashboard
 
 All documentation is organized in the [`docs/`](./docs/) folder:
 
-### Quick Links
-- **[Installation Guide](./docs/setup/INSTALLATION.md)** - Complete setup instructions
-- **[Quick Start](./docs/setup/QUICKSTART.md)** - Get running in 5 minutes
-- **[Architecture](./docs/architecture/ARCHITECTURE.md)** - System design overview
-
 ### Core Documentation
-- **[Project Analysis](./docs/overview/PROJECT_ANALYSIS.md)** - Complete project breakdown
-- **[Features List](./docs/overview/FEATURES.md)** - All implemented features
-- **[Project Summary](./docs/overview/PROJECT_SUMMARY.md)** - High-level overview
-
-### PGM Documentation
-- **[What is PGM?](./docs/pgm/WHAT_IS_PGM.md)** - Introduction to Probabilistic Graphical Models
-- **[PGM Documentation](./docs/pgm/PGM_DOCUMENTATION.md)** - Complete PGM guide
-- **[PGM Integration](./docs/pgm/PGM_INTEGRATION_GUIDE.md)** - How to integrate PGM
-- **[PGM Module Summary](./docs/pgm/PGM_MODULE_SUMMARY.md)** - Module overview
+- **[Project Structure](./PROJECT_STRUCTURE.md)** - Project organization
+- **[Design Document](./DESIGN.md)** - System architecture and design
+- **[Installation Guide](./INSTALLATION.md)** - Setup instructions
 
 ### Feature Documentation
-- **[PGM Graph Visualization](./docs/features/PGM_GRAPH_SUMMARY.md)** - Interactive Bayesian network
-- **[Feature Contribution](./docs/features/FEATURE_CONTRIBUTION_COMPLETE.md)** - Feature impact analysis
-- **[Model Evaluation](./docs/features/MODEL_EVALUATION_COMPLETE.md)** - Performance metrics
-- **[Failure Analysis](./docs/features/FAILURE_ANALYSIS_COMPLETE.md)** - Error analysis
+- **[PGM Documentation](./docs/pgm/PGM_DOCUMENTATION.md)** - Probabilistic Graphical Models
+- **[Features Overview](./docs/overview/FEATURES.md)** - All implemented features
+- **[Architecture](./docs/architecture/ARCHITECTURE.md)** - System design
 
-### Performance
-- **[Performance Fixes](./docs/performance/PERFORMANCE_FIXES.md)** - Optimizations applied
-- **[Frontend Performance](./frontend/PERFORMANCE_GUIDE.md)** - Frontend tuning guide
-
-### Frontend
-- **[Frontend README](./frontend/README.md)** - Frontend overview
-- **[Frontend Setup](./frontend/SETUP_GUIDE.md)** - Frontend installation
-- **[Premium UI Guide](./frontend/PREMIUM_UI_COMPLETE.md)** - UI enhancements
+### Quick Links
+- **[Setup Guide](./docs/setup/INSTALLATION.md)** - Complete setup instructions
+- **[Quick Start](./docs/setup/QUICKSTART.md)** - Get running in 5 minutes
+- **[Frontend Guide](./frontend/README.md)** - Frontend documentation
 
 📚 **See [docs/README.md](./docs/README.md) for complete documentation index**
 
