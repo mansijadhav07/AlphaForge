@@ -480,6 +480,14 @@ def create_baseline_comparison(X_train: pd.DataFrame,
     # Initialize comparison
     comparison = BaselineComparison()
     
+    # Add baseline models for comparison
+    comparison.add_model('Logistic Regression', LogisticRegressionBaseline())
+    comparison.add_model('Majority Class', MajorityBaseline())
+    comparison.add_model('Random', RandomBaseline())
+    
+    # Run comparison for baseline models
+    results = comparison.compare_all(X_train, y_train, X_test, y_test)
+    
     # Add PGM first (as the primary model)
     if include_pgm and pgm_predictions is not None:
         logger.info("Adding PGM (Bayesian Network) as primary model...")
@@ -518,23 +526,8 @@ def create_baseline_comparison(X_train: pd.DataFrame,
             prediction_time=0.0  # Already predicted
         )
         
-        comparison.models['Bayesian Network (PGM)'] = None  # Placeholder
-        comparison.results['Bayesian Network (PGM)'] = pgm_metrics
-    
-    # Add baseline models for comparison
-    comparison.add_model('Logistic Regression', LogisticRegressionBaseline())
-    comparison.add_model('Majority Class', MajorityBaseline())
-    comparison.add_model('Random', RandomBaseline())
-    
-    # Run comparison for baseline models
-    baseline_results = comparison.compare_all(X_train, y_train, X_test, y_test)
-    
-    # Merge results
-    if include_pgm and pgm_predictions is not None:
-        results = {'Bayesian Network (PGM)': comparison.results['Bayesian Network (PGM)']}
-        results.update(baseline_results)
-    else:
-        results = baseline_results
+        # Add PGM to results (at the beginning)
+        results = {'Bayesian Network (PGM)': pgm_metrics, **results}
     
     comparison.results = results
     

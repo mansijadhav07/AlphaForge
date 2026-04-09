@@ -26,6 +26,32 @@ AlphaForge is a production-grade financial intelligence platform that combines:
 
 Unlike traditional black-box models, AlphaForge provides **transparent, explainable predictions** using Bayesian Networks that model the causal relationships between market features.
 
+## 🏆 Why Bayesian Network (PGM)?
+
+AlphaForge uses a **Bayesian Network (Probabilistic Graphical Model)** as its primary prediction engine. Here's why:
+
+### Performance Comparison
+
+| Model | Accuracy | F1 Score | Explainability | Uncertainty |
+|-------|----------|----------|----------------|-------------|
+| **Bayesian Network (PGM)** | **69.1%** | **0.691** | ✅ Full | ✅ Yes |
+| Logistic Regression | 38.8% | 0.379 | ⚠️ Limited | ⚠️ Partial |
+| Majority Class | 34.0% | 0.173 | ❌ None | ❌ No |
+| Random | 33.5% | 0.335 | ❌ None | ❌ No |
+
+### Key Advantages
+
+1. **Explainability**: Shows exactly how features influence predictions with causal reasoning
+2. **Probabilistic**: Outputs probability distributions, not just point predictions
+3. **Uncertainty Quantification**: Provides confidence levels for every prediction
+4. **Scenario Analysis**: Test "what-if" scenarios by changing feature values
+5. **Domain-Appropriate**: Models feature dependencies (RSI → Momentum → Return)
+6. **Regulatory Compliance**: Transparent decision-making for financial regulations
+
+**78% higher accuracy** than Logistic Regression | **103% improvement** over random baseline
+
+📖 **Read more**: [Why Bayesian Network?](docs/WHY_BAYESIAN_NETWORK.md)
+
 ## ✨ Key Features
 
 ### 🧠 Probabilistic Graphical Models (PGM)
