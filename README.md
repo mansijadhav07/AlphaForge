@@ -64,6 +64,7 @@ AlphaForge uses a **Bayesian Network (Probabilistic Graphical Model)** as its pr
 - **Model Evaluation**: Comprehensive metrics (accuracy, Brier score, calibration)
 
 ### 📊 Advanced Analytics
+- **Feature Intelligence Pipeline**: NEW! Visual data transformation flow from raw data to model input
 - **Interactive PGM Graph**: Visualize Bayesian network structure
 - **Feature Contribution Charts**: See which features drive predictions
 - **Confusion Matrix**: Understand classification performance
@@ -97,7 +98,7 @@ AlphaForge uses a **Bayesian Network (Probabilistic Graphical Model)** as its pr
 │                     Frontend (Next.js 14)                    │
 │  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐   │
 │  │Dashboard │  │PGM Graph │  │ Feature  │  │  Model   │   │
-│  │          │  │          │  │  Impact  │  │   Eval   │   │
+│  │          │  │          │  │ Pipeline │  │   Eval   │   │
 │  └──────────┘  └──────────┘  └──────────┘  └──────────┘   │
 │         Glassmorphism UI + Framer Motion Animations         │
 └────────────────────────┬────────────────────────────────────┘
@@ -188,6 +189,12 @@ http://localhost:3000
 ```
 
 You'll see a premium animated splash screen, then be redirected to the dashboard!
+
+**6. Explore Key Features**
+- **Dashboard**: Market overview with live signals
+- **Feature Intelligence**: NEW! Visual data pipeline (Model Intelligence → Feature Pipeline)
+- **PGM Graph**: Interactive Bayesian Network
+- **Model Evaluation**: Performance metrics and comparisons
 
 ## 📖 Documentation
 
@@ -287,6 +294,9 @@ http://localhost:8000/docs
 
 ### Dashboard
 Premium glassmorphism cards with real-time market data, animated stats, and AI-powered signals.
+
+### Feature Intelligence (NEW!)
+Visual data pipeline showing transformation from raw market data to model-ready features with interactive discretization toggle.
 
 ### PGM Graph
 Interactive Bayesian Network visualization showing feature dependencies and causal relationships.

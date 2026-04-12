@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { Network, GitBranch, Layers, Target, Scale, CheckCircle2, Gauge, AlertTriangle } from 'lucide-react'
+import { Network, GitBranch, Layers, Target, Scale, CheckCircle2, Gauge, AlertTriangle, Sparkles } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const modelSections = [
@@ -17,6 +17,7 @@ const modelSections = [
   {
     title: 'Data',
     items: [
+      { name: 'Feature Pipeline', href: '/feature-intelligence', icon: Sparkles, description: 'Data transformation flow' },
       { name: 'Discretization', href: '/discretization', icon: Layers, description: 'Feature binning' },
     ]
   },

@@ -158,7 +158,7 @@ export function PriceChart({ data, showIndicators = {}, highlightLast = false }:
                 />
               )
             }
-            return null
+            return <></>
           }}
           name="Price"
           fill="url(#priceGradient)"

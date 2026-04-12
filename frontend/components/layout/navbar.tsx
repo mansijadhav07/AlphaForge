@@ -21,7 +21,7 @@ export function Navbar() {
 
   // Check if current path is in Model Intelligence section
   const isModelIntelligenceActive = pathname?.match(
-    /\/(pgm-graph|structure-analysis|discretization|feature-impact|baseline-comparison|model-evaluation|calibration|model-failures)/
+    /\/(pgm-graph|structure-analysis|discretization|feature-intelligence|feature-impact|baseline-comparison|model-evaluation|calibration|model-failures)/
   )
 
   return (
