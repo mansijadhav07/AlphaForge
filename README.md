@@ -95,43 +95,43 @@ AlphaForge uses a **Bayesian Network (Probabilistic Graphical Model)** as its pr
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                     Frontend (Next.js 14)                    │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐   │
-│  │Dashboard │  │PGM Graph │  │ Feature  │  │  Model   │   │
-│  │          │  │          │  │ Pipeline │  │   Eval   │   │
-│  └──────────┘  └──────────┘  └──────────┘  └──────────┘   │
+│                     Frontend (Next.js 14)                   │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐     │
+│  │Dashboard │  │PGM Graph │  │ Feature  │  │  Model   │     │
+│  │          │  │          │  │ Pipeline │  │   Eval   │     │
+│  └──────────┘  └──────────┘  └──────────┘  └──────────┘     │
 │         Glassmorphism UI + Framer Motion Animations         │
 └────────────────────────┬────────────────────────────────────┘
                          │ REST API
 ┌────────────────────────▼────────────────────────────────────┐
-│                   Backend (FastAPI)                          │
-│  ┌──────────────────────────────────────────────────────┐  │
-│  │              backend/models/ (Core AI)                │  │
-│  │  • State Encoding    • Inference Engine              │  │
-│  │  • Graph Structure   • Explanation Engine            │  │
-│  │  • Probability Learn • Scenario Simulator            │  │
-│  │  • Evaluation        • Failure Analysis              │  │
-│  │  • Feature Engineering • Analytics • Backtesting     │  │
-│  └──────────────────────────────────────────────────────┘  │
-│  ┌──────────────────────────────────────────────────────┐  │
-│  │           backend/api/ & backend/services/            │  │
-│  │  • REST Endpoints    • Business Logic                │  │
-│  │  • Caching Service   • Data Service                  │  │
-│  └──────────────────────────────────────────────────────┘  │
-│  ┌──────────────────────────────────────────────────────┐  │
-│  │              backend/pipelines/                       │  │
-│  │  • Batch Pipeline    • Streaming Pipeline            │  │
-│  └──────────────────────────────────────────────────────┘  │
+│                   Backend (FastAPI)                         │
+│  ┌──────────────────────────────────────────────────────┐   │
+│  │              backend/models/ (Core AI)               │   │
+│  │  • State Encoding    • Inference Engine              │   │
+│  │  • Graph Structure   • Explanation Engine            │   │
+│  │  • Probability Learn • Scenario Simulator            │   │
+│  │  • Evaluation        • Failure Analysis              │   │
+│  │  • Feature Engineering • Analytics • Backtesting     │   │
+│  └──────────────────────────────────────────────────────┘   │
+│  ┌──────────────────────────────────────────────────────┐   │
+│  │           backend/api/ & backend/services/           │   │
+│  │  • REST Endpoints    • Business Logic                │   │
+│  │  • Caching Service   • Data Service                  │   │
+│  └──────────────────────────────────────────────────────┘   │
+│  ┌──────────────────────────────────────────────────────┐   │
+│  │              backend/pipelines/                      │   │
+│  │  • Batch Pipeline    • Streaming Pipeline            │   │
+│  └──────────────────────────────────────────────────────┘   │
 └────────────────────────┬────────────────────────────────────┘
                          │
 ┌────────────────────────▼────────────────────────────────────┐
-│                    Data Layer                                │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐   │
-│  │ yfinance │  │ Parquet  │  │  Redis   │  │  Logs    │   │
-│  │   API    │  │  Files   │  │  Cache   │  │          │   │
-│  └──────────┘  └──────────┘  └──────────┘  └──────────┘   │
-│     data/        data/         data/          logs/          │
-│   ingestion/   features/     features/                       │
+│                    Data Layer                               │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐     │
+│  │ yfinance │  │ Parquet  │  │  Redis   │  │  Logs    │     │
+│  │   API    │  │  Files   │  │  Cache   │  │          │     │
+│  └──────────┘  └──────────┘  └──────────┘  └──────────┘     │
+│     data/        data/         data/          logs/         │
+│   ingestion/   features/     features/                      │
 └─────────────────────────────────────────────────────────────┘
 ```
 
